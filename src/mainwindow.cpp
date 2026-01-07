@@ -52,7 +52,7 @@ MainWindow::~MainWindow() {}
 
 void MainWindow::setupUI()
 {
-
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
 
 
 }
