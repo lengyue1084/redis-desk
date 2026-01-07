@@ -11,5 +11,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void loadStyleSheet(const QString &filePath);
+    void setupUI();
 };
 #endif // MAINWINDOW_H

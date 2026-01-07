@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     statusBar()->showMessage("就绪");
 
     // 初始化UI
-    //setupUI();
+    setupUI();
     // setupMenus();
     // setupContextMenu();
     // setupToolBar();
@@ -49,6 +49,13 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {}
+
+void MainWindow::setupUI()
+{
+
+
+
+}
 
 
 void MainWindow::loadStyleSheet(const QString &filePath)
