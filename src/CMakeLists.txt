@@ -18,13 +18,13 @@ set(QRC_FILES
 
 # 创建可执行文件
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(my-admin
+    qt_add_executable(my-redis
         MANUAL_FINALIZATION
         ${SOURCES}
         ${HEADERS}
     )
 else()
-    add_executable(my-admin
+    add_executable(my-redis
         ${SOURCES}
         ${HEADERS}
     )
@@ -39,15 +39,15 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             QT_RESOURCE_ALIAS ${qrc_name}
         )
     endforeach()
-    
-    qt_add_resources(my-admin "app_resources"
+
+    qt_add_resources(my-redis "app_resources"
         PREFIX "/"
         FILES ${QRC_FILES}
     )
 else()
     # Qt5处理方式
     qt5_add_resources(RCC_SOURCES ${QRC_FILES})
-    target_sources(my-admin PRIVATE ${RCC_SOURCES}
+    target_sources(my-redis PRIVATE ${RCC_SOURCES}
         constants/constants.h)
 endif()
 
@@ -98,7 +98,7 @@ endforeach()
 
 # 对于Qt 6，仍然需要FILE_SET组织头文件用于构建
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    target_sources(my-admin PRIVATE
+    target_sources(my-redis PRIVATE
         FILE_SET HEADERS
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES ${HEADERS}
@@ -106,16 +106,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 endif()
 
 # 设置目标属性
-set_target_properties(my-admin PROPERTIES
+set_target_properties(my-redis PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-    OUTPUT_NAME "my-admin"
+    OUTPUT_NAME "my-redis"
     # 设置PDB文件输出目录（Windows调试信息）
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
 )
 
 # 包含目录
-target_include_directories(my-admin PRIVATE
+target_include_directories(my-redis PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/constants
     # ${CMAKE_CURRENT_SOURCE_DIR}/dialogs
@@ -125,23 +125,32 @@ target_include_directories(my-admin PRIVATE
 )
 
 # 链接库
-target_link_libraries(my-admin PRIVATE
+target_link_libraries(my-redis PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
 )
 
 # 添加编译定义
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(my-admin PRIVATE DEBUG=1)
+    target_compile_definitions(my-redis PRIVATE DEBUG=1)
+endif()
+
+# 设置编译器编码选项
+if(MSVC)
+    # Visual Studio编译器
+    target_compile_options(my-redis PRIVATE /utf-8)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # GCC/Clang编译器
+    target_compile_options(my-redis PRIVATE -finput-charset=UTF-8 -fexec-charset=UTF-8)
 endif()
 
 # Qt6最终化
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_finalize_executable(my-admin)
+    qt_finalize_executable(my-redis)
 endif()
 
 # 安装配置
-install(TARGETS my-admin
+install(TARGETS my-redis
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
