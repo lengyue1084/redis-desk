@@ -1,4 +1,18 @@
 /* 自定义标题栏样式 */
+QMainWindow{
+    background: transparent;
+}
+
+QWidget#centralWidget{
+    background-color: rgba(17, 24, 39, 1);
+    margin: 0px;
+   /* border-radius:15px;*/
+}
+
+
+
+
+/*//////////////////////////*/
 #customTitleBar {
     background-color: #4a90e2;
     color: white;

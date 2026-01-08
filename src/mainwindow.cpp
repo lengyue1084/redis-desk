@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QGraphicsDropShadowEffect>
+#include <QSplitter>
 #include "constants/constants.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -60,6 +61,8 @@ MainWindow::~MainWindow() {}
 void MainWindow::setupUI()
 {
 
+    // 1. 设置主窗口透明
+    //setAttribute(Qt::WA_TranslucentBackground);
     setupCentralWidget();
 }
 
@@ -114,13 +117,22 @@ void MainWindow::setupUI()
 void MainWindow::setupCentralWidget()
 {
     // 创建中心部件
-    QWidget *centralWidget = new QWidget(this);
+    QWidget *centralWidget = new QFrame(this);
+    centralWidget->setObjectName("centralWidget");
+    centralWidget->setContentsMargins(0,0,0,0);
     setCentralWidget(centralWidget);
 
     // 主布局
-    QVBoxLayout *mainLayout =  new QVBoxLayout(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     mainLayout->setContentsMargins(8,8,8,8);
     mainLayout->setSpacing(8);
+
+    QSplitter *mainSplitter = new QSplitter(Qt::Horizontal,centralWidget);
+    mainSplitter->setChildrenCollapsible(false);
+    mainLayout->addWidget(mainSplitter);
+
+
+
 
 
 }
