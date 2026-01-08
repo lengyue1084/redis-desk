@@ -1,13 +1,80 @@
 /* 自定义标题栏样式 */
 QMainWindow{
     background: transparent;
+    padding: 0px;
+    font-size: 14px;
 }
 
 QWidget#centralWidget{
     background-color: rgba(17, 24, 39, 1);
     margin: 0px;
+    padding: 0px;
    /* border-radius:15px;*/
 }
+
+QSplitter#mainSplitter {
+    margin: 0px;
+    padding: 0px;
+    width: 0px;
+
+}
+
+/* width水平分割器的手柄宽度 */
+/* height垂直分割器的手柄高度 */
+/*QSplitter#mainSplitter::handle {
+       background-color: #cccccc;
+       width: 1px;
+       height: 1px;
+       border: 1px solid #ffffff;
+       border-radius: 3px;
+       margin: 0px;
+   }*/
+
+   /* 手柄悬停效果 */
+/*   QSplitter#mainSplitter::handle:hover {
+       background-color: #3498db;
+       border-color: #2980b9;
+   }*/
+
+   /* 手柄按下效果 */
+/*   QSplitter#mainSplitter::handle:pressed {
+       background-color: #2980b9;
+   }*/
+
+
+
+QWidget#leftContentQidget{
+    background-color: rgba(31,41,55,1);
+    margin: 0px;
+    padding: 0px;
+
+}
+
+QWidget#leftopWidget{
+
+}
+
+QLabel#titleLabel{
+   font-size: 24px;
+   line-height: 32px;
+   font-weight:700;
+   color: rgba(168,85,247,1);
+
+}
+
+QPushButton#connectNewLabel{
+   height: 60px;
+   background-color: rgb(147, 51, 234);
+   border-radius: 6px;
+   color: #ffffff;
+   padding: 8px;
+   line-height: 60px;  /* 等于height，实现垂直居中 */
+   text-align: center; /* 水平居中 */
+
+
+}
+
+
 
 
 

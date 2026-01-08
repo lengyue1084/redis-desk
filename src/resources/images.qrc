@@ -4,5 +4,6 @@
         <file>images/icons/about.png</file>
         <file>images/icons/client.png</file>
         <file>images/icons/query.png</file>
+        <file>images/icons/icon-plus.png</file>
     </qresource>
 </RCC>

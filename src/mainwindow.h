@@ -35,6 +35,7 @@ private:
     void setupRightWidget();
 
     QWidget *m_leftContentQidget;
+    QWidget *m_rightContentWidget;
 
     // 右侧窗口标题栏组件
     QWidget *m_rightTitleWidget;

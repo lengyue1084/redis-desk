@@ -30,6 +30,23 @@
   <aside class="w-64 bg-gray-800 h-screen p-4 flex flex-col">
     <div class="mb-8">
       <h1 class="text-2xl font-bold text-purple-500">RedisAdmin</h1>
+      <!-- 按钮行 -->
+      <div class="flex justify-between items-center mt-4">
+        <button id="newConnectionBtn" class="bg-purple-600 hover:bg-purple-700 rounded-md px-3 py-2 text-sm flex items-center">
+          <i class="fa fa-plus mr-2"></i>新建连接
+        </button>
+        <div class="flex space-x-2">
+          <button id="settingsBtn" class="bg-gray-700 hover:bg-gray-600 rounded-md p-2 text-sm flex items-center justify-center w-8 h-8">
+            <i class="fa fa-cog"></i>
+          </button>
+          <button id="importBtn" class="bg-gray-700 hover:bg-gray-600 rounded-md p-2 text-sm flex items-center justify-center w-8 h-8">
+            <i class="fa fa-upload"></i>
+          </button>
+          <button id="exportBtn" class="bg-gray-700 hover:bg-gray-600 rounded-md p-2 text-sm flex items-center justify-center w-8 h-8">
+            <i class="fa fa-download"></i>
+          </button>
+        </div>
+      </div>
     </div>
     <!-- 服务器列表 -->
     <div class="mb-6">
@@ -788,6 +805,81 @@
     </div>
   </main>
 
+  <!-- Redis新建连接弹框 -->
+  <div id="newConnectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-gray-800 rounded-lg p-6 w-96">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">新建Redis连接</h3>
+        <button id="closeNewConnectionModal" class="text-gray-400 hover:text-white">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <form>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">连接名称</label>
+          <input type="text" placeholder="例如：本地Redis" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">主机</label>
+          <input type="text" placeholder="127.0.0.1" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">端口</label>
+          <input type="text" placeholder="6379" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">密码</label>
+          <input type="password" placeholder="可选" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">数据库</label>
+          <input type="text" placeholder="0" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="cancelNewConnection" class="bg-gray-700 hover:bg-gray-600 rounded-md px-3 py-2 text-sm">取消</button>
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 rounded-md px-3 py-2 text-sm">连接</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 系统配置弹框 -->
+  <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-gray-800 rounded-lg p-6 w-96">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">系统配置</h3>
+        <button id="closeSettingsModal" class="text-gray-400 hover:text-white">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <form>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">主题</label>
+          <select class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+            <option>深色主题</option>
+            <option>浅色主题</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">语言</label>
+          <select class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+            <option>简体中文</option>
+            <option>English</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm text-gray-400 mb-1">自动刷新间隔</label>
+          <input type="text" placeholder="30" class="bg-gray-700 rounded-md px-3 py-2 text-sm w-full">
+          <p class="text-xs text-gray-500 mt-1">单位：秒</p>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="cancelSettings" class="bg-gray-700 hover:bg-gray-600 rounded-md px-3 py-2 text-sm">取消</button>
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 rounded-md px-3 py-2 text-sm">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // 初始化键类型分布饼图
     const keyTypeCtx = document.getElementById('keyTypeChart').getContext('2d');
@@ -1094,5 +1186,65 @@
           }
         });
       });
+  });
+
+  // 弹框事件处理
+  document.addEventListener('DOMContentLoaded', function() {
+    // 获取DOM元素
+    const newConnectionBtn = document.getElementById('newConnectionBtn');
+    const newConnectionModal = document.getElementById('newConnectionModal');
+    const closeNewConnectionModal = document.getElementById('closeNewConnectionModal');
+    const cancelNewConnection = document.getElementById('cancelNewConnection');
+    
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModal = document.getElementById('closeSettingsModal');
+    const cancelSettings = document.getElementById('cancelSettings');
+    
+    // 新建连接按钮点击事件
+    newConnectionBtn.addEventListener('click', function() {
+      newConnectionModal.classList.remove('hidden');
     });
-  </script>
+    
+    // 关闭新建连接弹框
+    function closeNewConnection() {
+      newConnectionModal.classList.add('hidden');
+    }
+    closeNewConnectionModal.addEventListener('click', closeNewConnection);
+    cancelNewConnection.addEventListener('click', closeNewConnection);
+    
+    // 设置按钮点击事件
+    settingsBtn.addEventListener('click', function() {
+      settingsModal.classList.remove('hidden');
+    });
+    
+    // 关闭设置弹框
+    function closeSettings() {
+      settingsModal.classList.add('hidden');
+    }
+    closeSettingsModal.addEventListener('click', closeSettings);
+    cancelSettings.addEventListener('click', closeSettings);
+    
+    // 点击弹框外部关闭弹框
+    window.addEventListener('click', function(e) {
+      if (e.target === newConnectionModal) {
+        closeNewConnection();
+      }
+      if (e.target === settingsModal) {
+        closeSettings();
+      }
+    });
+    
+    // 导入导出按钮点击事件
+    const importBtn = document.getElementById('importBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    
+    importBtn.addEventListener('click', function() {
+      alert('导入功能开发中...');
+    });
+    
+    exportBtn.addEventListener('click', function() {
+      alert('导出功能开发中...');
+    });
+  });
+</script>

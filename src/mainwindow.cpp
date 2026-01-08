@@ -9,12 +9,14 @@
 #include <QGridLayout>
 #include <QGraphicsDropShadowEffect>
 #include <QSplitter>
+#include <QLabel>
 #include "constants/constants.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_isMaximized(false)
     , m_leftContentQidget(nullptr)
+    , m_rightContentWidget(nullptr)
     , m_rightTitleWidget(nullptr)
     , m_minimizeBtn(nullptr)
     , m_maximizeBtn(nullptr)
@@ -117,19 +119,86 @@ void MainWindow::setupUI()
 void MainWindow::setupCentralWidget()
 {
     // 创建中心部件
-    QWidget *centralWidget = new QFrame(this);
+    QWidget *centralWidget = new QWidget(this);
     centralWidget->setObjectName("centralWidget");
     centralWidget->setContentsMargins(0,0,0,0);
     setCentralWidget(centralWidget);
 
     // 主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setContentsMargins(8,8,8,8);
+    mainLayout->setContentsMargins(0,0,0,0);
     mainLayout->setSpacing(8);
 
+    // 左右分割器
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal,centralWidget);
-    mainSplitter->setChildrenCollapsible(false);
+    mainSplitter->setObjectName("mainSplitter");
+    mainSplitter->setChildrenCollapsible(true);
     mainLayout->addWidget(mainSplitter);
+
+    // 左侧 widget
+    m_leftContentQidget = new QWidget(mainSplitter);
+    m_leftContentQidget->setObjectName("leftContentQidget");
+    m_leftContentQidget->setMinimumHeight(20);
+    QVBoxLayout *leftContentLayout = new QVBoxLayout(m_leftContentQidget);
+
+    // 左上 titleWidget
+    QWidget *m_leftopWidget = new QWidget(m_leftContentQidget);
+    m_leftopWidget->setObjectName("leftopWidget");
+    QVBoxLayout *leftopLayout = new QVBoxLayout(m_leftopWidget);
+    leftopLayout->setObjectName("leftopLayout");
+    m_leftopWidget->setMinimumHeight(80);  // ← 必须在这里设置
+    m_leftopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    leftContentLayout->addWidget(m_leftopWidget);
+    // 设置标题
+    QLabel *titleLabel = new QLabel(m_leftopWidget);
+    titleLabel->setText(Constants::Ttile::projectTitle());
+    titleLabel->setObjectName("titleLabel");
+    titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    leftopLayout->addWidget(titleLabel);
+
+    // 设置连接widget
+
+
+    QWidget *connectWdiget = new QWidget(m_leftopWidget);
+    QVBoxLayout *connectLayout = new QVBoxLayout(connectWdiget);
+    QPushButton *connectNewPushButton = new QPushButton("新建连接");
+    leftopLayout->addWidget(connectWdiget);
+
+    connectNewPushButton->setObjectName("connectNewLabel");
+    QIcon *connectNewPushButtonIcon = new QIcon(":/images/icons/icon-plus.png");
+    connectNewPushButton->setIconSize(QSize(14,14));
+    //connectNewLabel->setTextFormat(Qt::RichText);
+    //connectNewLabel->setText(QString("<div style=\"text-align:center;display:flex; align-items: center;\"><img src=\":/images/icons/icon-plus.png\" width=\"14\" height=\"14\"> <span>新建连接</span></div>"));
+    connectLayout->addWidget(connectNewPushButton);
+    connectLayout->addStretch();
+
+
+
+
+
+    leftContentLayout->addStretch();
+
+
+    // 右侧widget
+    m_rightContentWidget = new QWidget(mainSplitter);
+    m_rightContentWidget->setObjectName("rightContentWidget");
+    m_rightContentWidget->setMinimumWidth(20);
+
+
+
+
+
+    // 设置主分割器初始大小 (左侧:右侧 = 3:7)
+    QList<int> mainSizes;
+    mainSizes << 300 << 700;
+    mainSplitter->setSizes(mainSizes);
+
+
+
+
+
+
+
 
 
 
@@ -141,10 +210,10 @@ void MainWindow::setupCentralWidget()
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     // 标题栏拖动
-    // if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightTitleWidget->geometry().contains(event->pos())) {
-    //     m_dragPosition = event->globalPos() - frameGeometry().topLeft();
-    //     event->accept();
-    // }
+    if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
+        m_dragPosition = event->globalPos() - frameGeometry().topLeft();
+        event->accept();
+    }
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -164,7 +233,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     // 双击标题栏最大化/恢复
-    if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightTitleWidget->geometry().contains(event->pos())) {
+    if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
         onMaximizeClicked();
     }
 }

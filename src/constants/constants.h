@@ -69,6 +69,11 @@ inline const QString& topWidgetBackground() { static const QString style = "back
 inline const QString& splitterHandle() { static const QString style = "QSplitter::handle { background-color: #cccccc; }"; return style; }
 }
 
+namespace Ttile {
+inline const QString& projectTitle(){ static const QString title = "RedisAdmin";return title;}
+
+}
+
 } // namespace Constants
 
 #endif // CONSTANTS_H
