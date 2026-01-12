@@ -101,66 +101,66 @@ QListView#connectListView{
 }
 
 /* 单个项目样式 */
-QListView::item {
-    height: 60px;
-    padding: 8px;
-    margin: 3px;
-    border: 1px solid transparent;
+QListView#connectListView::item {
+    min-height: 40px;
+    padding: 0px;
+    margin: 0px;
+    border: 0px solid transparent;
     border-radius: 6px;
     background-color: white;
 }
 
 /* 鼠标悬停效果 */
-QListView::item:hover {
+QListView#connectListView::item:hover {
     background-color: #e8f4ff;
-    border: 1px solid #b3d9ff;
+    border: 0px solid #b3d9ff;
 }
 
 /* 选中状态 */
-QListView::item:selected {
-    background-color: #4da6ff;
-    border: 1px solid #3399ff;
+QListView#connectListView::item:selected {
+    background-color: #374151;
+    border: 0px solid #374151;
     color: white;
 }
 
 /* 选中但未激活状态 */
-QListView::item:selected:!active {
-    background-color: #e6e6e6;
+QListView#connectListView::item:selected:!active {
+    background-color: #374151;
     color: #333;
 }
 
 /* 交替行颜色 */
-QListView::item:alternate {
-    background-color: #f9f9f9;
+QListView#connectListView::item:alternate {
+    background-color: #374151;
 }
 
 /* 禁用状态 */
-QListView::item:disabled {
+QListView#connectListView::item:disabled {
     color: #999;
     background-color: #f0f0f0;
 }
 
 /* 滚动条样式 */
-QScrollBar:vertical {
+QScrollBar#connectListView:vertical {
     border: none;
-    background: #f0f0f0;
+    background: #374151;
     width: 10px;
     margin: 0px;
 }
 
-QScrollBar::handle:vertical {
+QScrollBar#connectListView::handle:vertical {
     background: #c1c1c1;
     border-radius: 5px;
     min-height: 30px;
 }
 
-QScrollBar::handle:vertical:hover {
+/*QScrollBar::handle:vertical:hover {
     background: #a8a8a8;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
-}
+}*/
 
 /*QPushButton#connectNewPushButton:pressed {
     background: rgba(123, 29, 207, 1);

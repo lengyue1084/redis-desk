@@ -14,16 +14,16 @@ void BaseDelegate::drawFocus(QPainter *painter, const QStyleOptionViewItem &opti
 
         // 1. 绘制外阴影
         QGraphicsDropShadowEffect shadow;
-        shadow.setBlurRadius(8);
-        shadow.setColor(QColor(147, 51, 234, 100));
+        //shadow.setBlurRadius(8);
+        //shadow.setColor(QColor(147, 51, 234, 100));
         shadow.setOffset(0, 0);
 
         // 2. 绘制内边框
         //QPen pen(QColor(147, 51, 234), 2);
-        QPen pen(QColor(55, 65, 81), 2);
-        painter->setPen(pen);
-        painter->setBrush(Qt::NoBrush);
-        painter->drawRect(rect.adjusted(2, 2, -2, -2));
+        //QPen pen(QColor(55, 65, 81), 2);
+        //painter->setPen(pen);
+        //painter->setBrush(Qt::NoBrush);
+        //painter->drawRect(rect.adjusted(2, 2, -2, -2));
 
         painter->restore();
     }
@@ -46,10 +46,10 @@ void BaseDelegate::drawBackground(QPainter *painter, const QStyleOptionViewItem 
     painter->save();
 
     if (option.state & QStyle::State_Selected) {
-        painter->fillRect(rect, option.palette.highlight());
+        //painter->fillRect(rect, option.palette.highlight());
     } else if (index.row() % 2 == 1) {
         // 奇偶行不同背景
-        painter->fillRect(rect, QColor(245, 245, 245));
+       // painter->fillRect(rect, QColor(245, 245, 245));
     } else {
         painter->fillRect(rect, option.palette.base());
     }
