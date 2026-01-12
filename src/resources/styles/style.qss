@@ -89,8 +89,9 @@ QPushButton#connectNewPushButton:hover {
 }
 
 QLabel[class="title-white"]{
-   color:#ffffff;
-   font-size:16px;
+   color:rgba(156,163,175,1);
+   font-size:14px;
+   font-weight:500;
 }
 
 QListView#connectListView{
@@ -98,36 +99,41 @@ QListView#connectListView{
    margin:0px;
    background-color: rgba(31,41,55,1);
    color:rgb(156, 163, 175);
+   border:none;
 }
 
 /* 单个项目样式 */
 QListView#connectListView::item {
     min-height: 40px;
+    width:100%;
     padding: 0px;
     margin: 0px;
     border: 0px solid transparent;
     border-radius: 6px;
-    background-color: white;
+    background: red;
+    font-size:16px;
 }
 
 /* 鼠标悬停效果 */
 QListView#connectListView::item:hover {
-    background-color: #e8f4ff;
+/*    background-color: #e8f4ff;*/
     border: 0px solid #b3d9ff;
+    background-color: red;
 }
 
 /* 选中状态 */
 QListView#connectListView::item:selected {
-    background-color: #374151;
+/*    background-color: #374151;*/
     border: 0px solid #374151;
     color: white;
+    background:red;
 }
 
 /* 选中但未激活状态 */
-QListView#connectListView::item:selected:!active {
+/*QListView#connectListView::item:selected:!active {
     background-color: #374151;
     color: #333;
-}
+}*/
 
 /* 交替行颜色 */
 QListView#connectListView::item:alternate {

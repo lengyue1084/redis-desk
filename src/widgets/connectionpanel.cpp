@@ -69,7 +69,7 @@ void ConnectionPanel::addTestConnection(const QString &name,
     item->setToolTip(tooltip);
 
     // 设置自定义数据（使用 UserRole + n 存储不同类型的数据）
-    item->setData(name, Qt::DisplayRole);                         // 显示名称
+     item->setData(name, Qt::DisplayRole);                         // 显示名称
     item->setData(QString("%1:%2").arg(host).arg(port), Qt::UserRole + 1);  // 地址
     item->setData(database, Qt::UserRole + 2);                    // 数据库索引
     item->setData(QDateTime::currentDateTime(), Qt::UserRole + 3);// 最后使用时间
@@ -81,9 +81,9 @@ void ConnectionPanel::addTestConnection(const QString &name,
     // item->setIcon(statusIcon);
 
     // 根据收藏状态设置文本颜色
-    if (isFavorite) {
-        item->setForeground(QBrush(QColor("#FF6B00")));  // 橙色表示收藏
-    }
+    // if (isFavorite) {
+    //     item->setForeground(QBrush(QColor("#FF6B00")));  // 橙色表示收藏
+    // }
 
     // 添加到模型
     m_listModel->appendRow(item);
@@ -108,8 +108,8 @@ void ConnectionPanel::setupUI()
 
     // 模型
     m_proxyModel->setSourceModel(m_listModel);
-    m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_proxyModel->setFilterKeyColumn(0);
+    //m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    //m_proxyModel->setFilterKeyColumn(0);
 
 
     m_connectListView->setModel(m_proxyModel);
