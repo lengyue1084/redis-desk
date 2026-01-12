@@ -11,11 +11,12 @@
 #include <QSplitter>
 #include <QLabel>
 #include "constants/constants.h"
+#include "widgets/connectionpanel.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_isMaximized(false)
-    , m_leftContentQidget(nullptr)
+    , m_leftContentWidget(nullptr)
     , m_rightContentWidget(nullptr)
     , m_rightTitleWidget(nullptr)
     , m_minimizeBtn(nullptr)
@@ -23,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_closeBtn(nullptr)
     , m_normalGeometry(QRect())
     , m_dragPosition(QPoint())
+    , m_connectionPanel(new ConnectionPanel(nullptr))
 {
+    m_connectionPanel = new ConnectionPanel(this);
     setObjectName("techBackground");
     setWindowTitle("Redis 管理客户端");
 
@@ -136,18 +139,19 @@ void MainWindow::setupCentralWidget()
     mainLayout->addWidget(mainSplitter);
 
     // 左侧 widget
-    m_leftContentQidget = new QWidget(mainSplitter);
-    m_leftContentQidget->setObjectName("leftContentQidget");
-    m_leftContentQidget->setMinimumHeight(20);
-    QVBoxLayout *leftContentLayout = new QVBoxLayout(m_leftContentQidget);
+    m_leftContentWidget = new QWidget(mainSplitter);
+    m_leftContentWidget->setObjectName("leftContentQidget");
+    m_leftContentWidget->setMinimumHeight(20);
+    QVBoxLayout *leftContentLayout = new QVBoxLayout(m_leftContentWidget);
 
     // 左上 titleWidget
-    QWidget *m_leftopWidget = new QWidget(m_leftContentQidget);
+    QWidget *m_leftopWidget = new QWidget(m_leftContentWidget);
     m_leftopWidget->setObjectName("leftopWidget");
     QVBoxLayout *leftopLayout = new QVBoxLayout(m_leftopWidget);
+    leftopLayout->setContentsMargins(0,0,0,0);
     leftopLayout->setObjectName("leftopLayout");
-    m_leftopWidget->setMinimumHeight(80);  // ← 必须在这里设置
-    m_leftopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    m_leftopWidget->setMinimumHeight(60);  // ← 必须在这里设置
+    m_leftopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     leftContentLayout->addWidget(m_leftopWidget);
     // 设置标题
     QLabel *titleLabel = new QLabel(m_leftopWidget);
@@ -156,23 +160,51 @@ void MainWindow::setupCentralWidget()
     titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     leftopLayout->addWidget(titleLabel);
 
-    // 设置连接widget
-
-
+    // 设置连接按钮widget
     QWidget *connectWdiget = new QWidget(m_leftopWidget);
-    QVBoxLayout *connectLayout = new QVBoxLayout(connectWdiget);
-    QPushButton *connectNewPushButton = new QPushButton("新建连接");
+    QHBoxLayout *connectLayout = new QHBoxLayout(connectWdiget);
     leftopLayout->addWidget(connectWdiget);
-
-    connectNewPushButton->setObjectName("connectNewLabel");
+    QPushButton *connectNewPushButton = new QPushButton("新建连接");
+    connectNewPushButton->setObjectName("connectNewPushButton");
+    //connectNewPushButton->setMinimumWidth(100); // 设置最小宽度
     QIcon *connectNewPushButtonIcon = new QIcon(":/images/icons/icon-plus.png");
+    connectNewPushButton->setIcon(*connectNewPushButtonIcon);
     connectNewPushButton->setIconSize(QSize(14,14));
-    //connectNewLabel->setTextFormat(Qt::RichText);
-    //connectNewLabel->setText(QString("<div style=\"text-align:center;display:flex; align-items: center;\"><img src=\":/images/icons/icon-plus.png\" width=\"14\" height=\"14\"> <span>新建连接</span></div>"));
+    //connectNewPushButton->setStyleSheet("spacing: 18px;");
+    connectNewPushButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed); // 宽度自适应，高度固定
     connectLayout->addWidget(connectNewPushButton);
-    connectLayout->addStretch();
+    //connectLayout->addStretch();
+    // 设置按钮
+    QPushButton *settingPushButton = new QPushButton("");
+    settingPushButton->setObjectName("settingPushButton");
+    QIcon *settingPushButtonIcon = new QIcon(":/images/icons/icon-setting.png");
+    settingPushButton->setIcon(*settingPushButtonIcon);
+    settingPushButton->setIconSize(QSize(14,14));
+    connectLayout->addWidget(settingPushButton);
+    QPushButton *importPushButton = new QPushButton("");
+    importPushButton->setObjectName("importPushButton");
+    QIcon *importPushButtonIcon = new QIcon(":/images/icons/icon-import.png");
+    importPushButton->setIcon(*importPushButtonIcon);
+    importPushButton->setIconSize(QSize(14,14));
+    connectLayout->addWidget(importPushButton);
+    QPushButton *exportPushButton = new QPushButton("");
+    exportPushButton->setObjectName("exportPushButton");
+    QIcon *exportPushButtonIcon = new QIcon(":/images/icons/icon-export.png");
+    exportPushButton->setIcon(*exportPushButtonIcon);
+    exportPushButton->setIconSize(QSize(14,14));
+    connectLayout->addWidget(exportPushButton);
 
+    // 设置连接区域
+    QWidget *clientPannelWidget = new QWidget(m_leftContentWidget);
+    QVBoxLayout *clientPannelLayout = new QVBoxLayout(clientPannelWidget);
+    QLabel *clentPannelLabel = new QLabel(clientPannelWidget);
+    clentPannelLabel->setText("服务器");
+    clentPannelLabel->setProperty("class","title-white");
+    clientPannelLayout->addWidget(clentPannelLabel);
 
+    clientPannelLayout->addWidget(m_connectionPanel);
+
+    leftContentLayout->addWidget(clientPannelWidget);
 
 
 
@@ -186,21 +218,10 @@ void MainWindow::setupCentralWidget()
 
 
 
-
-
     // 设置主分割器初始大小 (左侧:右侧 = 3:7)
     QList<int> mainSizes;
     mainSizes << 300 << 700;
     mainSplitter->setSizes(mainSizes);
-
-
-
-
-
-
-
-
-
 
 
 
@@ -210,7 +231,7 @@ void MainWindow::setupCentralWidget()
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     // 标题栏拖动
-    if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
+    if (m_leftContentWidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
         m_dragPosition = event->globalPos() - frameGeometry().topLeft();
         event->accept();
     }
@@ -233,7 +254,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     // 双击标题栏最大化/恢复
-    if (m_leftContentQidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
+    if (m_leftContentWidget->geometry().contains(event->pos()) || m_rightContentWidget->geometry().contains(event->pos())) {
         onMaximizeClicked();
     }
 }

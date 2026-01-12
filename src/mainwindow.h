@@ -2,6 +2,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QMouseEvent>
+#include "widgets/connectionpanel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -34,8 +35,9 @@ private:
     void setupLeftWidget();
     void setupRightWidget();
 
-    QWidget *m_leftContentQidget;
+    QWidget *m_leftContentWidget;
     QWidget *m_rightContentWidget;
+    ConnectionPanel *m_connectionPanel;
 
     // 右侧窗口标题栏组件
     QWidget *m_rightTitleWidget;

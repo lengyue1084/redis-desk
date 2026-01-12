@@ -2,12 +2,14 @@
 set(SOURCES
     main.cpp
     mainwindow.cpp
+    widgets/connectionpanel.cpp
 
 )
 
 set(HEADERS
     mainwindow.h
     constants/constants.h
+    widgets/connectionpanel.h
 )
 
 # 资源文件
@@ -22,6 +24,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${SOURCES}
         ${HEADERS}
+        delegates/base/basedelegate.h
+        delegates/base/basedelegate.cpp
+        delegates/connectionpanel/connectionpaneldelegate.h
+        delegates/connectionpanel/connectionpaneldelegate.cpp
+
     )
 else()
     add_executable(my-redis
