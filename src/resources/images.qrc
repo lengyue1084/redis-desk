@@ -8,5 +8,7 @@
         <file>images/icons/icon-export.png</file>
         <file>images/icons/icon-import.png</file>
         <file>images/icons/icon-setting.png</file>
+        <file>images/icons/icon-client.png</file>
+        <file>images/icons/icon-client-active.png</file>
     </qresource>
 </RCC>

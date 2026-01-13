@@ -5,8 +5,8 @@
 
 namespace Constants {
 // 窗口尺寸
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 1500;
+const int WINDOW_HEIGHT = 1000;
 const double DIALOG_COEFFICIENT = 0.1;
 
 const int WINDOW_DIALOG_WIDTH = WINDOW_WIDTH * ( 1 - DIALOG_COEFFICIENT );

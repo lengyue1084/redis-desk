@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QMouseEvent>
 #include "widgets/connectionpanel.h"
+#include "widgets/leftmenupanel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -49,4 +50,7 @@ private:
     bool m_isMaximized;
     QRect m_normalGeometry;
     QPoint m_dragPosition;
+
+    // 左侧
+    LeftMenuPanel *m_leftMenuPanel;
 };

@@ -3,6 +3,8 @@ set(SOURCES
     main.cpp
     mainwindow.cpp
     widgets/connectionpanel.cpp
+    widgets/leftmenupanel.cpp
+
 
 )
 
@@ -10,6 +12,7 @@ set(HEADERS
     mainwindow.h
     constants/constants.h
     widgets/connectionpanel.h
+    widgets/leftmenupanel.h
 )
 
 # 资源文件
@@ -28,6 +31,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         delegates/base/basedelegate.cpp
         delegates/connectionpanel/connectionpaneldelegate.h
         delegates/connectionpanel/connectionpaneldelegate.cpp
+
 
     )
 else()
@@ -55,7 +59,8 @@ else()
     # Qt5处理方式
     qt5_add_resources(RCC_SOURCES ${QRC_FILES})
     target_sources(my-redis PRIVATE ${RCC_SOURCES}
-        constants/constants.h)
+        constants/constants.h
+        widgets/leftmenupanel.cpp)
 endif()
 
 # IDE虚拟文件夹分组 - 统一组织为Source Files和Header Files主文件夹

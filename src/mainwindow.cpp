@@ -25,8 +25,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_normalGeometry(QRect())
     , m_dragPosition(QPoint())
     , m_connectionPanel(new ConnectionPanel(nullptr))
+    , m_leftMenuPanel(new LeftMenuPanel(nullptr))
 {
     m_connectionPanel = new ConnectionPanel(this);
+    m_leftMenuPanel = new LeftMenuPanel(this);
     setObjectName("techBackground");
     setWindowTitle("Redis 管理客户端");
 
@@ -203,9 +205,9 @@ void MainWindow::setupCentralWidget()
     clientPannelLayout->addWidget(clentPannelLabel);
 
     clientPannelLayout->addWidget(m_connectionPanel);
-
     leftContentLayout->addWidget(clientPannelWidget);
 
+    leftContentLayout->addWidget(m_leftMenuPanel);
 
 
     leftContentLayout->addStretch();

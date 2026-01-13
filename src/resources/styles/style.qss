@@ -208,6 +208,44 @@ QPushButton#exportPushButton:hover {
 }
 
 
+QPushButton[class="left-menu-btn"]{
+    color: rgb(209, 213, 219);
+    height:40px;
+    text-align: left;
+    padding-left:10px;
+    padding-right:10px;
+    background-color: rgba(31,41,55,1);
+    border:none;
+
+}
+
+QPushButton[class="left-menu-btn"]::icon{
+    padding-left:0px;
+    padding-right:0px;
+    margin-right:20px;
+
+}
+
+QPushButton[class="left-menu-btn"]:hover{
+    background-color: rgba(147, 51, 234, 1);
+
+}
+
+QPushButton[class="left-menu-btn-selected"]{
+    font-weight:bold;
+    height: 30px;
+    min-width:100px;
+    background-color: rgba(147, 51, 234, 1);
+    border-radius: 16px;
+
+}
+
+
+
+
+
+
+
 
 
 

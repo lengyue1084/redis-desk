@@ -16,7 +16,10 @@ ConnectionPanel::ConnectionPanel(QWidget *parent)
     m_proxyModel = new QSortFilterProxyModel(this);
     // 设置最小的宽高
     //this->setMinimumSize(200, 100);  // 设置最小宽高
-    this->setMinimumHeight(400);
+    // 移除固定高度限制，使用更灵活的大小策略
+   //this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    this->setMinimumHeight(100); // 只设置最小高度，不设置
+    this->setMaximumHeight(100);
     setupUI();
     setTestData();
 
@@ -26,18 +29,17 @@ void ConnectionPanel::setTestData()
 {
 
     m_listModel->clear();
-    m_listModel->setHorizontalHeaderLabels(QStringList() << "redis 链接列表");
     // 添加测试连接数据
     addTestConnection("本地 Redis", "127.0.0.1", 6379, "", 0, true);
-    addTestConnection("测试服务器", "192.168.1.100", 6379, "test123", 1, true);
-    addTestConnection("生产主库", "10.0.1.1", 6379, "prod_pass", 0, false);
-    addTestConnection("生产从库", "10.0.1.2", 6379, "prod_pass", 0, false);
-    addTestConnection("缓存集群-节点1", "redis-cluster-1.com", 6380, "", 0, false);
-    addTestConnection("缓存集群-节点2", "redis-cluster-2.com", 6380, "", 0, false);
-    addTestConnection("开发环境", "dev.redis.local", 6379, "", 2, true);
-    addTestConnection("压测环境", "stress.redis.local", 6379, "stress_pass", 0, false);
-    addTestConnection("哨兵模式", "sentinel.master.com", 26379, "", 0, false);
-    addTestConnection("Docker容器", "localhost", 6381, "", 0, true);
+    addTestConnection("127.0.0.1:3306", "192.168.1.100", 6379, "test123", 1, true);
+    // addTestConnection("生产主库", "10.0.1.1", 6379, "prod_pass", 0, false);
+    // addTestConnection("生产从库", "10.0.1.2", 6379, "prod_pass", 0, false);
+    // addTestConnection("缓存集群-节点1", "redis-cluster-1.com", 6380, "", 0, false);
+    // addTestConnection("缓存集群-节点2", "redis-cluster-2.com", 6380, "", 0, false);
+    // addTestConnection("开发环境", "dev.redis.local", 6379, "", 2, true);
+    // addTestConnection("压测环境", "stress.redis.local", 6379, "stress_pass", 0, false);
+    // addTestConnection("哨兵模式", "sentinel.master.com", 26379, "", 0, false);
+    // addTestConnection("Docker容器", "localhost", 6381, "", 0, true);
 
 
 }
@@ -76,6 +78,10 @@ void ConnectionPanel::addTestConnection(const QString &name,
     //item->setData(static_cast<int>(status), Qt::UserRole + 4);    // 连接状态
     item->setData(isFavorite, Qt::UserRole + 5);                  // 是否收藏
 
+    QIcon icon(":/images/icons/icon-setting.png");
+    //QIcon icon = QIcon(":/images/icons/icon-setting.png");
+    item->setIcon(icon);
+
     // 根据状态设置图标
     // QIcon statusIcon = getStatusIcon(status);
     // item->setIcon(statusIcon);
@@ -95,12 +101,12 @@ ConnectionPanel::~ConnectionPanel()
 
 void ConnectionPanel::setupUI()
 {
-    QVBoxLayout *layout = new QVBoxLayout();
-    QLabel *l = new QLabel(this);
-    layout->addWidget(l);
+    QVBoxLayout *layout = new QVBoxLayout(this);
     m_connectListView = new QListView(this);
+    layout->addWidget(m_connectListView);
     m_connectListView->setObjectName("connectListView");
     m_connectListView->setItemDelegate(m_connectionPanelDelegrate);
+    m_connectListView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     // m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
     // m_listView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -111,9 +117,8 @@ void ConnectionPanel::setupUI()
     //m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     //m_proxyModel->setFilterKeyColumn(0);
 
-
     m_connectListView->setModel(m_proxyModel);
-    l->setText("sfsfsfs");
+
 
 
 }
