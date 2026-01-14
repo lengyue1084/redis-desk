@@ -5,8 +5,8 @@
 
 namespace Constants {
 // 窗口尺寸
-const int WINDOW_WIDTH = 1500;
-const int WINDOW_HEIGHT = 1000;
+const int WINDOW_WIDTH = 1024;
+const int WINDOW_HEIGHT = 768;
 const double DIALOG_COEFFICIENT = 0.1;
 
 const int WINDOW_DIALOG_WIDTH = WINDOW_WIDTH * ( 1 - DIALOG_COEFFICIENT );
@@ -18,6 +18,16 @@ constexpr int TOOLBAR_ICON_SIZE = 24;
 constexpr int SPLITTER_HANDLE_WIDTH = 1;
 constexpr int LEFT_MENU_MIN_WIDTH = 200;
 constexpr int RIGHT_CONTENT_MIN_WIDTH = 20;
+
+// 字体大小常量
+constexpr int BASE_FONT_SIZE = 14;
+constexpr int TITLE_FONT_SIZE = 18;
+constexpr int TEXT_FONT_SIZE = 12;
+constexpr int SMALL_FONT_SIZE = 10;
+
+// 布局比例常量
+constexpr double LEFT_PANEL_RATIO = 0.3;
+constexpr double RIGHT_PANEL_RATIO = 0.7;
 
 // 使用内联函数替代QString常量
 inline const QString& styleFilePath() {

@@ -4,6 +4,7 @@ set(SOURCES
     mainwindow.cpp
     widgets/connectionpanel.cpp
     widgets/leftmenupanel.cpp
+    utils/fontmanager.cpp
 
 
 )
@@ -13,6 +14,7 @@ set(HEADERS
     constants/constants.h
     widgets/connectionpanel.h
     widgets/leftmenupanel.h
+    utils/fontmanager.h
 )
 
 # 资源文件

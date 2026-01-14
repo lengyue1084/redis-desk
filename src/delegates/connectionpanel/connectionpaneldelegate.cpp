@@ -1,6 +1,7 @@
 // delegates/connectionpanel/connectionpaneldelegate.cpp
 #include "delegates/connectionpanel/connectionpaneldelegate.h"
 #include <QLineEdit>
+#include "utils/fontmanager.h"
 
 ConnectionPanelDelegrate::ConnectionPanelDelegrate(QObject *parent)
     : BaseDelegate(parent)
@@ -59,10 +60,15 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
     //     icon.paint(painter, iconRect, Qt::AlignCenter);
     // }
 
-    int leftMargin = 10;
+    // 动态计算边距和图标大小
+    QWidget const *widget = option.widget;
+    double scale = FontManager::getFontScale(widget);
+    int leftMargin = static_cast<int>(10 * scale);
+    int iconWidth = static_cast<int>(15 * scale);
+
     QRect adjustdRect = option.rect.adjusted(leftMargin,0,0,0);
     QRect iconRect = adjustdRect;
-    iconRect.setWidth(15);
+    iconRect.setWidth(iconWidth);
     icon.paint(painter,iconRect,Qt::AlignCenter);
 
     painter->restore();
@@ -71,7 +77,12 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
     painter->save();
     QString text = index.data(Qt::DisplayRole).toString();
     QRect textRect = option.rect;
-    textRect.adjust(30, 0, 0, 0); // 文本位置（Icon 右侧）
+    int textLeftMargin = static_cast<int>(30 * scale);
+    textRect.adjust(textLeftMargin, 0, 0, 0); // 文本位置（Icon 右侧）
+
+    // 设置动态字体大小
+    QFont font = FontManager::getTextFont(option.widget);
+    painter->setFont(font);
 
     // 选中时文本为白色，否则使用系统文本色
     QPen textPen = QPen(option.palette.text().color());
@@ -123,6 +134,8 @@ QSize ConnectionPanelDelegrate::sizeHint(const QStyleOptionViewItem &option,
 {
     // 提供合适的列表项高度，确保显示清晰
     QSize size = QStyledItemDelegate::sizeHint(option, index);
-    size.setHeight(qMax(size.height(), 30)); // 设置最小高度为 36 像素
+    double scale = FontManager::getFontScale(option.widget);
+    int minHeight = static_cast<int>(30 * scale);
+    size.setHeight(qMax(size.height(), minHeight)); // 设置最小高度
     return size;
 }

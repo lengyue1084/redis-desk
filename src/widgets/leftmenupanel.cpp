@@ -26,18 +26,19 @@ void LeftMenuPanel::setupUI()
     m_dataSummaryMenuPushButton->setText("数据概览");
     m_dataSummaryMenuPushButton->setIcon(QIcon(":/images/icons/icon-client.png"));
     m_dataSummaryMenuPushButton->setProperty("class","left-menu-btn");
-    m_dataSummaryMenuPushButton->setProperty("class","left-menu-btn-selected");
+
     m_dataSummaryMenuPushButton->setIconSize(QSize(16,16));
-    bool re = m_dataSummaryMenuPushButton->isChecked();
-    connect(m_dataSummaryMenuPushButton,&QPushButton::clicked,this,&slo);
-
-
+    m_dataSummaryMenuPushButton->setCheckable(true);
+    m_dataSummaryMenuPushButton->setChecked(false);
+    connect(m_dataSummaryMenuPushButton,&QPushButton::clicked,this,&LeftMenuPanel::slo);
     layout->addWidget(m_dataSummaryMenuPushButton);
-
 
 }
 
 void LeftMenuPanel::slo(){
     bool re = m_dataSummaryMenuPushButton->isChecked();
     qDebug() << re;
+    if(re){
+        m_dataSummaryMenuPushButton->setProperty("class","left-menu-btn-selected");
+    }
 }

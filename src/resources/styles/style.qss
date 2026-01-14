@@ -72,7 +72,7 @@ QLabel#titleLabel{
 
 QPushButton#connectNewPushButton{
    height: 30px;
-   min-width:100px;
+   min-width:120px;
    background: rgba(147, 51, 234, 1);
    border-radius: 6px;
    color: #ffffff;

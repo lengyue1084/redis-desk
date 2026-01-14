@@ -179,6 +179,7 @@ void MainWindow::setupCentralWidget()
     // 设置按钮
     QPushButton *settingPushButton = new QPushButton("");
     settingPushButton->setObjectName("settingPushButton");
+    settingPushButton->setFixedSize(36,36);
     QIcon *settingPushButtonIcon = new QIcon(":/images/icons/icon-setting.png");
     settingPushButton->setIcon(*settingPushButtonIcon);
     settingPushButton->setIconSize(QSize(14,14));

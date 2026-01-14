@@ -18,8 +18,9 @@ ConnectionPanel::ConnectionPanel(QWidget *parent)
     //this->setMinimumSize(200, 100);  // 设置最小宽高
     // 移除固定高度限制，使用更灵活的大小策略
    //this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    this->setMinimumHeight(100); // 只设置最小高度，不设置
-    this->setMaximumHeight(100);
+    // this->setMinimumHeight(100); // 只设置最小高度，不设置
+    // this->setMaximumHeight(100);
+    this->setFixedHeight(100);
     setupUI();
     setTestData();
 

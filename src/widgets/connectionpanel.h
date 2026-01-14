@@ -31,6 +31,7 @@ public:
                                             const QString &password,
                                             int database,
                            bool isFavorite);
+    void adjustPanelHeight();
 
 };
 #endif // CONNECTIONPANEL_H
