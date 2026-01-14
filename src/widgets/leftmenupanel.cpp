@@ -1,5 +1,6 @@
 #include "widgets/leftmenupanel.h"
 #include <QVBoxLayout>
+#include "utils/dpitools.h"
 
 LeftMenuPanel::LeftMenuPanel(QWidget *parent)
 {
@@ -27,7 +28,7 @@ void LeftMenuPanel::setupUI()
     m_dataSummaryMenuPushButton->setIcon(QIcon(":/images/icons/icon-client.png"));
     m_dataSummaryMenuPushButton->setProperty("class","left-menu-btn");
 
-    m_dataSummaryMenuPushButton->setIconSize(QSize(16,16));
+    m_dataSummaryMenuPushButton->setIconSize(QSize(DpiTools::scaleValue(this, 16), DpiTools::scaleValue(this, 16)));
     m_dataSummaryMenuPushButton->setCheckable(true);
     m_dataSummaryMenuPushButton->setChecked(false);
     connect(m_dataSummaryMenuPushButton,&QPushButton::clicked,this,&LeftMenuPanel::slo);

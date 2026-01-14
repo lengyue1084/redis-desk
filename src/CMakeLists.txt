@@ -5,6 +5,7 @@ set(SOURCES
     widgets/connectionpanel.cpp
     widgets/leftmenupanel.cpp
     utils/fontmanager.cpp
+    utils/dpitools.cpp
 
 
 )
@@ -15,6 +16,7 @@ set(HEADERS
     widgets/connectionpanel.h
     widgets/leftmenupanel.h
     utils/fontmanager.h
+    utils/dpitools.h
 )
 
 # 资源文件

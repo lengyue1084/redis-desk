@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QStandardItemModel>
 #include <QDateTime>
+#include "utils/dpitools.h"
 
 ConnectionPanel::ConnectionPanel(QWidget *parent)
     : QWidget(parent),m_connectListView(nullptr)
@@ -20,7 +21,7 @@ ConnectionPanel::ConnectionPanel(QWidget *parent)
    //this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     // this->setMinimumHeight(100); // 只设置最小高度，不设置
     // this->setMaximumHeight(100);
-    this->setFixedHeight(100);
+    this->setFixedHeight(DpiTools::scaleValue(this, 100));
     setupUI();
     setTestData();
 

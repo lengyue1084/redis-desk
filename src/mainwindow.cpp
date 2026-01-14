@@ -12,6 +12,7 @@
 #include <QLabel>
 #include "constants/constants.h"
 #include "widgets/connectionpanel.h"
+#include "utils/dpitools.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -131,8 +132,6 @@ void MainWindow::setupCentralWidget()
 
     // 主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setContentsMargins(0,0,0,0);
-    mainLayout->setSpacing(8);
 
     // 左右分割器
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal,centralWidget);
@@ -152,7 +151,7 @@ void MainWindow::setupCentralWidget()
     QVBoxLayout *leftopLayout = new QVBoxLayout(m_leftopWidget);
     leftopLayout->setContentsMargins(0,0,0,0);
     leftopLayout->setObjectName("leftopLayout");
-    m_leftopWidget->setMinimumHeight(60);  // ← 必须在这里设置
+    m_leftopWidget->setMinimumHeight(DpiTools::scaleValue(this, 60));  // ← 必须在这里设置
     m_leftopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     leftContentLayout->addWidget(m_leftopWidget);
     // 设置标题
@@ -165,37 +164,39 @@ void MainWindow::setupCentralWidget()
     // 设置连接按钮widget
     QWidget *connectWdiget = new QWidget(m_leftopWidget);
     QHBoxLayout *connectLayout = new QHBoxLayout(connectWdiget);
+    connectLayout->setContentsMargins(0, 0, 0, 0);
+    connectLayout->setSpacing(5);
     leftopLayout->addWidget(connectWdiget);
     QPushButton *connectNewPushButton = new QPushButton("新建连接");
     connectNewPushButton->setObjectName("connectNewPushButton");
     //connectNewPushButton->setMinimumWidth(100); // 设置最小宽度
+    int iconSize = DpiTools::scaleValue(this, 14);
     QIcon *connectNewPushButtonIcon = new QIcon(":/images/icons/icon-plus.png");
     connectNewPushButton->setIcon(*connectNewPushButtonIcon);
-    connectNewPushButton->setIconSize(QSize(14,14));
+    connectNewPushButton->setIconSize(QSize(iconSize, iconSize));
     //connectNewPushButton->setStyleSheet("spacing: 18px;");
     connectNewPushButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed); // 宽度自适应，高度固定
-    connectLayout->addWidget(connectNewPushButton);
-    //connectLayout->addStretch();
+    connectLayout->addWidget(connectNewPushButton,3);
+    connectLayout->addStretch(1);
     // 设置按钮
     QPushButton *settingPushButton = new QPushButton("");
     settingPushButton->setObjectName("settingPushButton");
-    settingPushButton->setFixedSize(36,36);
     QIcon *settingPushButtonIcon = new QIcon(":/images/icons/icon-setting.png");
     settingPushButton->setIcon(*settingPushButtonIcon);
-    settingPushButton->setIconSize(QSize(14,14));
-    connectLayout->addWidget(settingPushButton);
+    settingPushButton->setIconSize(QSize(iconSize, iconSize));
+    connectLayout->addWidget(settingPushButton,1);
     QPushButton *importPushButton = new QPushButton("");
     importPushButton->setObjectName("importPushButton");
     QIcon *importPushButtonIcon = new QIcon(":/images/icons/icon-import.png");
     importPushButton->setIcon(*importPushButtonIcon);
-    importPushButton->setIconSize(QSize(14,14));
-    connectLayout->addWidget(importPushButton);
+    importPushButton->setIconSize(QSize(iconSize, iconSize));
+    connectLayout->addWidget(importPushButton,1);
     QPushButton *exportPushButton = new QPushButton("");
     exportPushButton->setObjectName("exportPushButton");
     QIcon *exportPushButtonIcon = new QIcon(":/images/icons/icon-export.png");
     exportPushButton->setIcon(*exportPushButtonIcon);
-    exportPushButton->setIconSize(QSize(14,14));
-    connectLayout->addWidget(exportPushButton);
+    exportPushButton->setIconSize(QSize(iconSize, iconSize));
+    connectLayout->addWidget(exportPushButton,1);
 
     // 设置连接区域
     QWidget *clientPannelWidget = new QWidget(m_leftContentWidget);
@@ -223,7 +224,7 @@ void MainWindow::setupCentralWidget()
 
     // 设置主分割器初始大小 (左侧:右侧 = 3:7)
     QList<int> mainSizes;
-    mainSizes << 300 << 700;
+    mainSizes << DpiTools::scaleValue(this, 300) << DpiTools::scaleValue(this, 700);
     mainSplitter->setSizes(mainSizes);
 
 

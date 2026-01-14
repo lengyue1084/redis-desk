@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include <QString>
+#include <QColor>
 
 namespace Constants {
 // 窗口尺寸
@@ -81,6 +82,35 @@ inline const QString& splitterHandle() { static const QString style = "QSplitter
 
 namespace Ttile {
 inline const QString& projectTitle(){ static const QString title = "RedisAdmin";return title;}
+
+}
+
+namespace Color {
+inline const QColor& getTitleColorDefaut(int alpha = 0){
+    static QColor color(243, 244, 246, alpha);
+    return color;
+}
+
+inline const QColor& getTitleBgColorConnectHover(int alpha = 50){
+    static QColor color(55, 65, 81, alpha);
+    return color;
+}
+
+
+
+
+// 32位 ARGB：Alpha(8位) + Red(8位) + Green(8位) + Blue(8位)
+// Alpha 范围：0（完全透明） 到 255（完全不透明）
+
+// 各种创建方式
+// QColor color1(255, 0, 0, 255);      // 不透明红色
+// QColor color2(255, 0, 0, 128);      // 半透明红色
+// QColor color3("#80FF0000");         // 半透明红色，十六进制
+// QColor color4(Qt::red);             // 预定义颜色（不透明）
+
+// // 设置透明度
+// color1.setAlpha(128);               // 设置为半透明
+// int alpha = color1.alpha();         // 获取透明度值
 
 }
 

@@ -1,7 +1,9 @@
+#include <QScreen>
 #include "utils/fontmanager.h"
 
 // 初始化静态成员
 double FontManager::m_fontScale = 1.0;
+double FontManager::m_dpiScale = 1.0;
 
 int FontManager::getBaseFontSize(const QWidget* widget) {
     double scale = getFontScale(widget);
@@ -11,6 +13,11 @@ int FontManager::getBaseFontSize(const QWidget* widget) {
 int FontManager::getTitleFontSize(const QWidget* widget) {
     double scale = getFontScale(widget);
     return static_cast<int>(18 * scale);
+}
+
+int FontManager::getTitleMenuFontSize(const QWidget* widget) {
+    double scale = getFontScale(widget);
+    return static_cast<int>(16 * scale);
 }
 
 int FontManager::getTextFontSize(const QWidget* widget) {
@@ -36,6 +43,19 @@ double FontManager::getFontScale(const QWidget* widget) {
     return m_fontScale;
 }
 
+double FontManager::getDpiScale(const QWidget* widget) {
+    if (!widget) {
+        return m_dpiScale;
+    }
+    
+    double scale = calculateDpiScale(widget);
+    if (scale != m_dpiScale) {
+        m_dpiScale = scale;
+    }
+    
+    return m_dpiScale;
+}
+
 QFont FontManager::getBaseFont(const QWidget* widget) {
     QFont font;
     font.setPointSize(getBaseFontSize(widget));
@@ -48,6 +68,14 @@ QFont FontManager::getTitleFont(const QWidget* widget) {
     font.setBold(true);
     return font;
 }
+
+QFont FontManager::getTitleMenuFont(const QWidget* widget) {
+    QFont font;
+    font.setPointSize(getTitleMenuFontSize(widget));
+    font.setBold(true);
+    return font;
+}
+
 
 QFont FontManager::getTextFont(const QWidget* widget) {
     QFont font;
@@ -77,8 +105,14 @@ double FontManager::calculateFontScale(const QWidget* widget) {
     // 标准对角线长度 (1500x1000 的对角线)
     double standardDiagonal = sqrt(1500 * 1500 + 1000 * 1000);
     
-    // 计算缩放比例
-    double scale = diagonal / standardDiagonal;
+    // 计算窗口缩放比例
+    double windowScale = diagonal / standardDiagonal;
+    
+    // 获取DPI缩放比例
+    double dpiScale = getDpiScale(widget);
+    
+    // 计算最终缩放比例
+    double scale = windowScale * dpiScale;
     
     // 限制缩放范围
     if (scale < 0.8) {
@@ -89,3 +123,34 @@ double FontManager::calculateFontScale(const QWidget* widget) {
     
     return scale;
 }
+
+double FontManager::calculateDpiScale(const QWidget* widget) {
+    if (!widget) {
+        return 1.0;
+    }
+    
+    // 获取屏幕DPI
+    QScreen* screen = widget->window()->screen();
+    if (!screen) {
+        return 1.0;
+    }
+    
+    // 获取逻辑DPI
+    double logicalDpi = screen->logicalDotsPerInch();
+    
+    // 标准DPI (96 DPI)
+    const double standardDpi = 96.0;
+    
+    // 计算DPI缩放因子
+    double dpiScale = logicalDpi / standardDpi;
+    
+    // 限制DPI缩放范围
+    if (dpiScale < 0.75) {
+        dpiScale = 0.75;
+    } else if (dpiScale > 2.0) {
+        dpiScale = 2.0;
+    }
+    
+    return dpiScale;
+}
+

@@ -67,6 +67,8 @@ QLabel#titleLabel{
    line-height: 32px;
    font-weight:700;
    color: rgba(168,85,247,1);
+   min-height:32px;
+   margin:0px 0px 10px 0px;
 
 }
 
