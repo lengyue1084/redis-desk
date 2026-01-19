@@ -10,5 +10,8 @@
         <file>images/icons/icon-setting.png</file>
         <file>images/icons/icon-client.png</file>
         <file>images/icons/icon-client-active.png</file>
+        <file>images/icons/icon-data-overview.png</file>
+        <file>images/icons/icon-key.png</file>
+        <file>images/icons/icon-monitor.png</file>
     </qresource>
 </RCC>

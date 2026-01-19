@@ -74,53 +74,6 @@ void MainWindow::setupUI()
     setupCentralWidget();
 }
 
-// void MainWindow::setupTitleBar()
-// {
-//     // 创建标题栏容器
-//     titleBar = new QWidget(this);
-//     titleBar->setObjectName("customTitleBar");
-//     titleBar->setFixedHeight(30);
-
-//     // 设置标题栏布局
-//     QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-//     titleLayout->setContentsMargins(10, 0, 10, 0);
-//     titleLayout->setSpacing(5);
-
-//     // 标题标签
-//     titleLabel = new QLabel("Redis 管理客户端", titleBar);
-//     titleLabel->setObjectName("titleLabel");
-//     titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-//     titleLayout->addWidget(titleLabel, 1);
-
-//     titleLabel2 = new QLabel("yidong", titleBar);
-
-//     // 最小化按钮
-//     minimizeBtn = new QPushButton("_", titleBar);
-//     minimizeBtn->setObjectName("minimizeBtn");
-//     minimizeBtn->setFixedSize(30, 30);
-//     titleLayout->addWidget(minimizeBtn);
-
-//     // 最大化按钮
-//     maximizeBtn = new QPushButton("□", titleBar);
-//     maximizeBtn->setObjectName("maximizeBtn");
-//     maximizeBtn->setFixedSize(30, 30);
-//     titleLayout->addWidget(maximizeBtn);
-
-//     // 关闭按钮
-//     closeBtn = new QPushButton("×", titleBar);
-//     closeBtn->setObjectName("closeBtn");
-//     closeBtn->setFixedSize(30, 30);
-//     titleLayout->addWidget(closeBtn);
-
-//     // 连接信号槽
-//     connect(minimizeBtn, &QPushButton::clicked, this, &MainWindow::onMinimizeClicked);
-//     connect(maximizeBtn, &QPushButton::clicked, this, &MainWindow::onMaximizeClicked);
-//     connect(closeBtn, &QPushButton::clicked, this, &MainWindow::onCloseClicked);
-
-//     // 设置标题栏为菜单栏区域
-//     setMenuWidget(titleBar);
-
-// }
 
 void MainWindow::setupCentralWidget()
 {
@@ -132,6 +85,8 @@ void MainWindow::setupCentralWidget()
 
     // 主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    // 调整整个边框
+    mainLayout->setContentsMargins(10, 10, 10, 10);
 
     // 左右分割器
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal,centralWidget);
@@ -144,6 +99,8 @@ void MainWindow::setupCentralWidget()
     m_leftContentWidget->setObjectName("leftContentQidget");
     m_leftContentWidget->setMinimumHeight(20);
     QVBoxLayout *leftContentLayout = new QVBoxLayout(m_leftContentWidget);
+    //调整left边框
+    //leftContentLayout->setContentsMargins(0, 0, 0, 0);
 
     // 左上 titleWidget
     QWidget *m_leftopWidget = new QWidget(m_leftContentWidget);
@@ -218,7 +175,16 @@ void MainWindow::setupCentralWidget()
     // 右侧widget
     m_rightContentWidget = new QWidget(mainSplitter);
     m_rightContentWidget->setObjectName("rightContentWidget");
-    m_rightContentWidget->setMinimumWidth(20);
+    m_rightContentWidget->setMinimumWidth(400);
+    QVBoxLayout *rightLayout = new QVBoxLayout(m_rightContentWidget);
+    // 调整右侧边框
+    //rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->setAlignment(Qt::AlignTop);
+
+    // 创建堆叠窗口
+    m_rightStackedWidget = new QStackedWidget(m_rightContentWidget);
+    rightLayout->addWidget(m_rightStackedWidget);
+    setupPages();
 
 
 
@@ -226,8 +192,17 @@ void MainWindow::setupCentralWidget()
     QList<int> mainSizes;
     mainSizes << DpiTools::scaleValue(this, 300) << DpiTools::scaleValue(this, 700);
     mainSplitter->setSizes(mainSizes);
+    // 设置分割器比例
+    mainSplitter->setStretchFactor(0, 0);  // 左侧不拉伸
+    mainSplitter->setStretchFactor(1, 1);  // 右侧拉伸
 
 
+
+}
+
+void MainWindow::setupPages()
+{
+    //m_keyManagerPage = new
 
 }
 

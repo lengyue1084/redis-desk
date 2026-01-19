@@ -2,7 +2,6 @@
 #include "delegates/connectionpanel/connectionpaneldelegate.h"
 #include <QLineEdit>
 #include "utils/fontmanager.h"
-#include "constants/constants.h"
 
 ConnectionPanelDelegrate::ConnectionPanelDelegrate(QObject *parent)
     : BaseDelegate(parent)
@@ -38,7 +37,7 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
         icon = QIcon(":/images/icons/icon-client-active.png");
 
         // 选中背景：紫色高亮
-        painter->fillRect(option.rect, Constants::Color::getTitleBgColorConnectHover());
+        painter->fillRect(option.rect, QColor(55, 65, 81, 50));
     } /*else if (option.state & QStyle::State_MouseOver) {
         // 悬停背景：淡紫色
         painter->fillRect(option.rect, QColor(55, 65, 81, 50));
@@ -65,7 +64,7 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
     QWidget const *widget = option.widget;
     double scale = FontManager::getFontScale(widget);
     int leftMargin = static_cast<int>(10 * scale);
-    int iconWidth = static_cast<int>(20 * scale);
+    int iconWidth = static_cast<int>(15 * scale);
 
     QRect adjustdRect = option.rect.adjusted(leftMargin,0,0,0);
     QRect iconRect = adjustdRect;
@@ -78,7 +77,7 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
     painter->save();
     QString text = index.data(Qt::DisplayRole).toString();
     QRect textRect = option.rect;
-    int textLeftMargin = static_cast<int>(35 * scale);
+    int textLeftMargin = static_cast<int>(30 * scale);
     textRect.adjust(textLeftMargin, 0, 0, 0); // 文本位置（Icon 右侧）
 
     // 设置动态字体大小
@@ -87,7 +86,7 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
 
     // 选中时文本为白色，否则使用系统文本色
     //QPen textPen = QPen(option.palette.text().color());
-    QPen textPen = QPen(Constants::Color::getTitleColorDefaut(50));
+    QPen textPen = QPen(QColor(243, 244, 246,50));
     //rgb(243, 244, 246)
 
     if ((option.state & QStyle::State_Selected) || (option.state & QStyle::State_MouseOver)) {

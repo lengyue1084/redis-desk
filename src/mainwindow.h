@@ -1,7 +1,9 @@
 #include <QMainWindow>
 #include <QPushButton>
+#include <QWidget>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QStackedWidget>
 #include "widgets/connectionpanel.h"
 #include "widgets/leftmenupanel.h"
 
@@ -22,6 +24,8 @@ protected:
 
     void loadStyleSheet(const QString &filePath);
 
+    void setupPages();
+
 private slots:
     // 标题栏按钮槽函数
     void onMinimizeClicked();
@@ -37,14 +41,24 @@ private:
     void setupRightWidget();
 
     QWidget *m_leftContentWidget;
-    QWidget *m_rightContentWidget;
+
     ConnectionPanel *m_connectionPanel;
 
     // 右侧窗口标题栏组件
-    QWidget *m_rightTitleWidget;
+    QWidget *m_rightContentWidget;
     QPushButton *m_minimizeBtn;
     QPushButton *m_maximizeBtn;
     QPushButton *m_closeBtn;
+    QStackedWidget *m_rightStackedWidget;
+
+    QWidget *m_dataSummaryPage;
+    QWidget *m_keyManagerPage;
+    QWidget *m_monitorPage;
+    QWidget *m_configPage;
+
+    QMap<QPushButton*,QWidget*> *m_buttonPageMap;
+
+
 
     // 窗口状态
     bool m_isMaximized;
@@ -53,4 +67,5 @@ private:
 
     // 左侧
     LeftMenuPanel *m_leftMenuPanel;
+
 };
