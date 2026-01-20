@@ -1,14 +1,4 @@
 # 收集源文件和头文件
-set(SOURCES
-    main.cpp
-    mainwindow.cpp
-    widgets/connectionpanel.cpp
-    widgets/leftmenupanel.cpp
-    utils/fontmanager.cpp
-    utils/dpitools.cpp
-
-
-)
 
 set(HEADERS
     mainwindow.h
@@ -17,6 +7,18 @@ set(HEADERS
     widgets/leftmenupanel.h
     utils/fontmanager.h
     utils/dpitools.h
+    utils/commonhelper.h
+)
+
+set(SOURCES
+    main.cpp
+    mainwindow.cpp
+    widgets/connectionpanel.cpp
+    widgets/leftmenupanel.cpp
+    utils/fontmanager.cpp
+    utils/dpitools.cpp
+    utils/commonhelper.cpp
+
 )
 
 # 资源文件

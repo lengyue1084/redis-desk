@@ -4,6 +4,7 @@
 //#include "utils/dpitools.h"
 #include "utils/fontmanager.h"
 #include "constants/constants.h"
+#include "utils/commonhelper.h"
 
 LeftMenuPanel::LeftMenuPanel(QWidget *parent)
     :QWidget(parent),m_menuButtonList(QList<QPushButton*>()),m_currentMenuButton(nullptr)
@@ -82,12 +83,10 @@ void LeftMenuPanel::selectMenuButton(QPushButton *clickButton)
     emit menuClicked(clickButton);
 
 }
+
 void LeftMenuPanel::updateStyle(QPushButton *button)
 {
-    if(!button) return;
-    button->style()->unpolish(button);
-    button->style()->polish(button);
-    button->update();
+    CommonHelper::refreshStyle(button);
 
 }
 

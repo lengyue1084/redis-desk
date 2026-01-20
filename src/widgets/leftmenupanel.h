@@ -32,7 +32,6 @@ private:
     QPushButton* getSelectedButton();
 
 private slots:
-    void menuSlot();
     void onMenuButtonClicked();
 
 };

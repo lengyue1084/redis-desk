@@ -15,15 +15,41 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private:
+
+    QWidget *m_leftContentWidget;
+    ConnectionPanel *m_connectionPanel;
+
+    // 右侧窗口标题栏组件
+    QWidget *m_rightContentWidget;
+    QPushButton *m_minimizeBtn;
+    QPushButton *m_maximizeBtn;
+    QPushButton *m_closeBtn;
+    QStackedWidget *m_rightStackedWidget;
+
+    QWidget *m_dataSummaryPage;
+    QWidget *m_keyManagerPage;
+    QWidget *m_monitorPage;
+    QWidget *m_configPage;
+    QMap<QPushButton*,QWidget*> *m_buttonPageMap;
+
+    // 窗口状态
+    bool m_isMaximized;
+    QRect m_normalGeometry;
+    QPoint m_dragPosition;
+
+    // 左侧
+    LeftMenuPanel *m_leftMenuPanel;
+
+    QWidget m_rightTitleWidget;
+
 protected:
     // 事件处理
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
-
     void loadStyleSheet(const QString &filePath);
-
     void setupPages();
 
 private slots:
@@ -40,32 +66,5 @@ private:
     void setupLeftWidget();
     void setupRightWidget();
 
-    QWidget *m_leftContentWidget;
-
-    ConnectionPanel *m_connectionPanel;
-
-    // 右侧窗口标题栏组件
-    QWidget *m_rightContentWidget;
-    QPushButton *m_minimizeBtn;
-    QPushButton *m_maximizeBtn;
-    QPushButton *m_closeBtn;
-    QStackedWidget *m_rightStackedWidget;
-
-    QWidget *m_dataSummaryPage;
-    QWidget *m_keyManagerPage;
-    QWidget *m_monitorPage;
-    QWidget *m_configPage;
-
-    QMap<QPushButton*,QWidget*> *m_buttonPageMap;
-
-
-
-    // 窗口状态
-    bool m_isMaximized;
-    QRect m_normalGeometry;
-    QPoint m_dragPosition;
-
-    // 左侧
-    LeftMenuPanel *m_leftMenuPanel;
 
 };
