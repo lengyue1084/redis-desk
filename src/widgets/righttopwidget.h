@@ -4,7 +4,10 @@
 #include <QPushButton>
 class RightTopWidget :public QWidget
 {
+    Q_OBJECT
+    public:
 
+    RightTopWidget();
 public:
     void setupUI();
     QPushButton* createRightMenuIconBtn(QWidget *widget);

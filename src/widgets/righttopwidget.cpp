@@ -3,6 +3,12 @@
 #include "widgets/righttopwidget.h"
 #include "utils/fontmanager.h"
 #include "constants/constants.h"
+
+void RightTopWidget::RightTopWidget()
+{
+
+
+}
 void RightTopWidget::setupUI()
 {
 
