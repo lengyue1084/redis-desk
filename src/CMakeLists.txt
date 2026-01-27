@@ -37,6 +37,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         delegates/base/basedelegate.cpp
         delegates/connectionpanel/connectionpaneldelegate.h
         delegates/connectionpanel/connectionpaneldelegate.cpp
+        widgets/keymanagerpage.cpp
+        widgets/keymanagerpage.h
+        widgets/righttopwidget.h
+        widgets/righttopwidget.cpp
 
 
     )

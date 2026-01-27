@@ -27,8 +27,8 @@ private:
     QPushButton *m_closeBtn;
     QStackedWidget *m_rightStackedWidget;
 
-    QWidget *m_dataSummaryPage;
     QWidget *m_keyManagerPage;
+    QWidget *m_dataSummaryPage;
     QWidget *m_monitorPage;
     QWidget *m_configPage;
     QMap<QPushButton*,QWidget*> *m_buttonPageMap;
@@ -42,6 +42,7 @@ private:
     LeftMenuPanel *m_leftMenuPanel;
 
     QWidget m_rightTitleWidget;
+    QWidget *m_rightTopWidget;
 
 protected:
     // 事件处理

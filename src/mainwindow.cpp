@@ -13,6 +13,7 @@
 #include "constants/constants.h"
 #include "widgets/connectionpanel.h"
 #include "utils/dpitools.h"
+#include "widgets/righttopwidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -27,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dragPosition(QPoint())
     , m_connectionPanel(new ConnectionPanel(nullptr))
     , m_leftMenuPanel(new LeftMenuPanel(nullptr))
+    , m_rightTopWidget(new RightTopWidget())
 {
     m_connectionPanel = new ConnectionPanel(this);
     m_leftMenuPanel = new LeftMenuPanel(this);
@@ -180,6 +182,10 @@ void MainWindow::setupCentralWidget()
     // 调整右侧边框
     //rightLayout->setContentsMargins(0, 0, 0, 0);
     rightLayout->setAlignment(Qt::AlignTop);
+    QPushButton * b = new QPushButton(this);
+    b->setText("sfsaf");
+    rightLayout->addWidget(b);
+    rightLayout->addWidget(m_rightTopWidget);
 
     // 创建堆叠窗口
     m_rightStackedWidget = new QStackedWidget(m_rightContentWidget);
