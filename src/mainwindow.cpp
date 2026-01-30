@@ -88,7 +88,9 @@ void MainWindow::setupCentralWidget()
     // 主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     // 调整整个边框
-    mainLayout->setContentsMargins(10, 10, 10, 10);
+    //mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+
 
     // 左右分割器
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal,centralWidget);
@@ -101,6 +103,7 @@ void MainWindow::setupCentralWidget()
     m_leftContentWidget->setObjectName("leftContentQidget");
     m_leftContentWidget->setMinimumHeight(20);
     QVBoxLayout *leftContentLayout = new QVBoxLayout(m_leftContentWidget);
+    leftContentLayout->setContentsMargins(10, 10, 10, 10);
     //调整left边框
     //leftContentLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -177,19 +180,22 @@ void MainWindow::setupCentralWidget()
     // 右侧widget
     m_rightContentWidget = new QWidget(mainSplitter);
     m_rightContentWidget->setObjectName("rightContentWidget");
-    m_rightContentWidget->setMinimumWidth(400);
+    //m_rightContentWidget->setMinimumWidth(400);
     QVBoxLayout *rightLayout = new QVBoxLayout(m_rightContentWidget);
     // 调整右侧边框
     //rightLayout->setContentsMargins(0, 0, 0, 0);
     rightLayout->setAlignment(Qt::AlignTop);
-    QPushButton * b = new QPushButton(this);
-    b->setText("sfsaf");
-    rightLayout->addWidget(b);
+    rightLayout->setContentsMargins(10, 0, 10, 10);
+    // QPushButton * b = new QPushButton(this);
+    // b->setText("sfsaf");
+    // rightLayout->addWidget(b);
     rightLayout->addWidget(m_rightTopWidget);
+
 
     // 创建堆叠窗口
     m_rightStackedWidget = new QStackedWidget(m_rightContentWidget);
     rightLayout->addWidget(m_rightStackedWidget);
+    rightLayout->addStretch();
     setupPages();
 
 
