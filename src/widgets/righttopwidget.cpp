@@ -31,7 +31,7 @@ QPushButton* RightTopWidget::createRightMenuIconBtn(QWidget *widget)
     QPushButton *btn = new QPushButton(widget);
     double scale = FontManager::getFontScale(widget);
     int iconWidth = static_cast<int>(Constants::RIGHT_CONTENT_MIN_WIDTH * scale);
-    btn->setText("333");
+    btn->setText("");
     btn->setIcon(QIcon(":/images/icons/icon-export.png"));
     btn->setIconSize(QSize(iconWidth,iconWidth));
     return btn;

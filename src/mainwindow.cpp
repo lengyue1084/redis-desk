@@ -183,19 +183,21 @@ void MainWindow::setupCentralWidget()
     //m_rightContentWidget->setMinimumWidth(400);
     QVBoxLayout *rightLayout = new QVBoxLayout(m_rightContentWidget);
     // 调整右侧边框
-    //rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->setAlignment(Qt::AlignTop);
     rightLayout->setContentsMargins(10, 0, 10, 10);
-    // QPushButton * b = new QPushButton(this);
-    // b->setText("sfsaf");
-    // rightLayout->addWidget(b);
+    rightLayout->setAlignment(Qt::AlignTop);
+    
+    // 设置m_rightTopWidget的大小策略
+    m_rightTopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_rightTopWidget->setMaximumHeight(50); // 设置最大高度，确保它不会占用过多空间
     rightLayout->addWidget(m_rightTopWidget);
-
 
     // 创建堆叠窗口
     m_rightStackedWidget = new QStackedWidget(m_rightContentWidget);
+    // 设置m_rightStackedWidget的大小策略，使其能够占据剩余空间
+    m_rightStackedWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     rightLayout->addWidget(m_rightStackedWidget);
-    rightLayout->addStretch();
+    // 移除拉伸，让m_rightStackedWidget自然占据剩余空间
+    // rightLayout->addStretch();
     setupPages();
 
 
