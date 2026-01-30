@@ -5,9 +5,9 @@
 class RightTopWidget :public QWidget
 {
     Q_OBJECT
-    public:
-
-    RightTopWidget();
+public:
+    explicit RightTopWidget(QWidget *parent = nullptr);
+    ~RightTopWidget();
 public:
     void setupUI();
     QPushButton* createRightMenuIconBtn(QWidget *widget);

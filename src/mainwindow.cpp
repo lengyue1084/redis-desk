@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dragPosition(QPoint())
     , m_connectionPanel(new ConnectionPanel(nullptr))
     , m_leftMenuPanel(new LeftMenuPanel(nullptr))
-    , m_rightTopWidget(new RightTopWidget())
+    , m_rightTopWidget(new RightTopWidget(nullptr))
 {
     m_connectionPanel = new ConnectionPanel(this);
     m_leftMenuPanel = new LeftMenuPanel(this);

@@ -4,9 +4,15 @@
 #include "utils/fontmanager.h"
 #include "constants/constants.h"
 
-void RightTopWidget::RightTopWidget()
+RightTopWidget::RightTopWidget(QWidget *parent)
+    :QWidget(parent)
 {
 
+
+}
+
+RightTopWidget::~RightTopWidget()
+{
 
 }
 void RightTopWidget::setupUI()
