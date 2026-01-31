@@ -87,7 +87,7 @@ QPushButton#connectNewPushButton{
 QPushButton#connectNewPushButton:hover {
     background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
     border: 1px solid rgba(194, 130, 255, 1); /* 边框颜色变化 */
-    box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3); /* 增强的阴影效果 */
+    /*box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3);*/ /* 增强的阴影效果 */
 }
 
 QLabel[class="title-white"]{
@@ -206,7 +206,7 @@ QPushButton#importPushButton:hover,
 QPushButton#exportPushButton:hover {
     background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
     /*border: 1px solid rgba(194, 130, 255, 1);*/
-    box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3); /* 增强的阴影效果 */
+   /* box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3); *//* 增强的阴影效果 */
 }
 
 
@@ -245,7 +245,32 @@ QPushButton.left-menu-btn-selected{
 }
 
 
+QPushButton.left-menu-btn-selected{
+    background-color: rgba(147, 51, 234, 1);
+    color: rgb(209, 213, 219);
+    height:40px;
+    text-align: left;
+    padding-left:10px;
+    padding-right:10px;
+    border:none;
+}
 
+
+QPushButton.right-top-menu-btn{
+    background-color: rgba(147, 51, 234, 1);
+    color: rgb(209, 213, 219);
+    text-align: center;
+    padding: 0px;
+    border:none;
+    border-radius: 50%;
+}
+
+
+QPushButton.right-top-menu-btn:hover {
+   background-color: rgba(171, 83, 255, 1);
+/*   box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3);*/
+
+}
 
 
 

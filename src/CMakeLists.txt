@@ -41,6 +41,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/keymanagerpage.h
         widgets/righttopwidget.h
         widgets/righttopwidget.cpp
+        constants/enums.h
 
 
     )

@@ -15,6 +15,8 @@ const int WINDOW_DIALOG_HEIGHT = WINDOW_HEIGHT * ( 1 - DIALOG_COEFFICIENT );
 
 const int LEFT_ICON_WIDTH_HEIGHT = 20;
 
+const int RIGHT_ICON_MENU_WIDTH_HEIGHT = 40;
+
 // 布局尺寸
 constexpr int TOP_WIDGET_HEIGHT = 40;
 constexpr int TOOLBAR_ICON_SIZE = 24;

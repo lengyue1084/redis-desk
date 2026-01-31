@@ -2,6 +2,7 @@
 #define RIGHTTOPWIDGET_H
 #include <QWidget>
 #include <QPushButton>
+#include "constants/enums.h"
 class RightTopWidget :public QWidget
 {
     Q_OBJECT
@@ -10,7 +11,12 @@ public:
     ~RightTopWidget() = default;
 public:
     void setupUI();
-    QPushButton* createRightMenuIconBtn(QWidget *widget);
+    QPushButton* createRightMenuIconBtn(const QString &iconPath,Menu::MenuType menuType);
+
+public slots:
+    void closeMenu();
+    void minMenu();
+    void maxMenu();
 
 };
 

@@ -13,5 +13,8 @@
         <file>images/icons/icon-data-overview.png</file>
         <file>images/icons/icon-key.png</file>
         <file>images/icons/icon-monitor.png</file>
+        <file>images/icons/icon-close.png</file>
+        <file>images/icons/icon-max.png</file>
+        <file>images/icons/icon-min.png</file>
     </qresource>
 </RCC>
