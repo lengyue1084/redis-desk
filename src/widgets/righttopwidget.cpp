@@ -2,7 +2,6 @@
 #include <QPushButton>
 #include <QIcon>
 #include <QApplication>
-#include <iostream>
 #include "widgets/righttopwidget.h"
 #include "utils/fontmanager.h"
 #include "constants/constants.h"
@@ -97,15 +96,26 @@ void RightTopWidget::closeMenu()
 
 void RightTopWidget::minMenu()
 {
-    //QApplication::quit();
     qDebug() << "min";
+    // 获取顶层窗口并最小化
+    if (QWidget *window = this->window()) {
+        window->showMinimized();
+    }
 
 }
 
 void RightTopWidget::maxMenu()
 {
-    //QApplication::quit();
     qDebug() << "max";
+    if (QWidget *window = this->window()) {
+        if (window->isMaximized()) {
+            window->showNormal();  // 还原
+            qDebug() << "窗口已还原";
+        } else {
+            window->showMaximized();  // 最大化
+            qDebug() << "窗口已最大化";
+        }
+    }
 
 }
 

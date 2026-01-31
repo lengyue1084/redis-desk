@@ -23,7 +23,6 @@ private:
     // 右侧窗口标题栏组件
     QWidget *m_rightContentWidget;
     QPushButton *m_minimizeBtn;
-    QPushButton *m_maximizeBtn;
     QPushButton *m_closeBtn;
     QStackedWidget *m_rightStackedWidget;
 

@@ -22,7 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_rightContentWidget(nullptr)
     , m_rightTitleWidget(nullptr)
     , m_minimizeBtn(nullptr)
-    , m_maximizeBtn(nullptr)
     , m_closeBtn(nullptr)
     , m_normalGeometry(QRect())
     , m_dragPosition(QPoint())
@@ -264,13 +263,11 @@ void MainWindow::onMaximizeClicked()
         // 恢复正常大小
         setGeometry(m_normalGeometry);
         m_isMaximized = false;
-        m_maximizeBtn->setText("□");
     } else {
         // 最大化
         m_normalGeometry = geometry();
         showMaximized();
         m_isMaximized = true;
-        m_maximizeBtn->setText("◱");
     }
 }
 
