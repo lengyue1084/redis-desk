@@ -272,6 +272,37 @@ QPushButton.right-top-menu-btn:hover {
 
 }
 
+QPushButton#addButton {
+   height: 30px;
+   min-width:80px;
+   background: rgba(147, 51, 234, 1);
+   border-radius: 6px;
+   color: #ffffff;
+   padding: 3px 10px;
+   text-align: center;
+   margin: 0px 5px;
+}
+
+QPushButton#addButton:hover {
+    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
+    border: 1px solid rgba(194, 130, 255, 1); /* 边框颜色变化 */
+}
+
+QPushButton#refreshButton {
+   height: 30px;
+   min-width:80px;
+   background: rgba(55,65,81,1);
+   border-radius: 6px;
+   color: #ffffff;
+   padding: 3px 10px;
+   text-align: center;
+   margin: 0px 5px;
+}
+
+QPushButton#refreshButton:hover {
+    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
+}
+
 
 
 

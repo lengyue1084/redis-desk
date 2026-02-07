@@ -42,6 +42,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/righttopwidget.h
         widgets/righttopwidget.cpp
         constants/enums.h
+        widgets/datasummarypage.h
+        widgets/datasummarypage.cpp
+        widgets/monitormenupage.h
+        widgets/monitormenupage.cpp
+        widgets/configmenupage.h
+        widgets/configmenupage.cpp
 
 
     )

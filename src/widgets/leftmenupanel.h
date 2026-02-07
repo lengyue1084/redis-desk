@@ -2,6 +2,7 @@
 #define LEFTMENUPANEL_H
 #include <QWidget>
 #include <QPushButton>
+#include "constants/enums.h"
 class LeftMenuPanel : public QWidget
 {
     Q_OBJECT
@@ -10,7 +11,7 @@ public:
     ~LeftMenuPanel();
 
 signals:
-    void menuClicked(QPushButton *button);
+    void menuClicked(int menuIndex);
 
 private:
     QPushButton *m_dataSummaryMenuPushButton;
@@ -26,7 +27,7 @@ private:
 
 private:
     void setupUI();
-    QPushButton* createMenuButton(const QString &text,const QString &iconPath);
+    QPushButton* createMenuButton(const QString &text,const QString &iconPath,Menu::LeftMenu leftMenu);
     void selectMenuButton(QPushButton *button);
     void updateStyle(QPushButton *button);
     QPushButton* getSelectedButton();

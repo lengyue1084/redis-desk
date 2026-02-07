@@ -26,10 +26,10 @@ private:
     QPushButton *m_closeBtn;
     QStackedWidget *m_rightStackedWidget;
 
-    QWidget *m_keyManagerPage;
-    QWidget *m_dataSummaryPage;
-    QWidget *m_monitorPage;
-    QWidget *m_configPage;
+    QWidget *m_keyManagerMenuPage;
+    QWidget *m_dataSummaryMenuPage;
+    QWidget *m_monitorMenuPage;
+    QWidget *m_configMenuPage;
     QMap<QPushButton*,QWidget*> *m_buttonPageMap;
 
     // 窗口状态
@@ -57,6 +57,7 @@ private slots:
     void onMinimizeClicked();
     void onMaximizeClicked();
     void onCloseClicked();
+    void changeRightContentWidget(int menuIndex);
 
 private:
     // 总布局

@@ -3,10 +3,12 @@
 #include <QWidget>
 class KeyManagerPage : public QWidget
 {
+    Q_OBJECT
 public:
-    KeyManagerPage() {
-
-    }
+   explicit KeyManagerPage(QWidget *parent = nullptr);
+    ~KeyManagerPage();
+   private:
+    void setupUI();
 };
 
 

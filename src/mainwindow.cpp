@@ -14,6 +14,10 @@
 #include "widgets/connectionpanel.h"
 #include "utils/dpitools.h"
 #include "widgets/righttopwidget.h"
+#include "widgets/keymanagerpage.h"
+#include "widgets/monitormenupage.h"
+#include "widgets/datasummarypage.h"
+#include "widgets/configmenupage.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -63,9 +67,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 关键：手动调用 connectSlotsByName
     QMetaObject::connectSlotsByName(this);
+
+    connect(m_leftMenuPanel,&LeftMenuPanel::menuClicked,this,&MainWindow::changeRightContentWidget);
 }
 
 MainWindow::~MainWindow() {}
+
+//切换右侧的容器
+void MainWindow::changeRightContentWidget(int menuIndex)
+{
+    qDebug() << "menu index:" << menuIndex;
+
+    m_rightStackedWidget->setCurrentIndex(menuIndex);
+
+}
 
 void MainWindow::setupUI()
 {
@@ -215,7 +230,17 @@ void MainWindow::setupCentralWidget()
 
 void MainWindow::setupPages()
 {
-    //m_keyManagerPage = new
+    m_keyManagerMenuPage = new KeyManagerPage(this);
+    m_rightStackedWidget->addWidget(m_keyManagerMenuPage);
+
+    m_dataSummaryMenuPage= new DataSummaryPage(this);
+    m_rightStackedWidget->addWidget(m_dataSummaryMenuPage);
+
+    m_monitorMenuPage= new MonitorMenuPage(this);
+    m_rightStackedWidget->addWidget(m_monitorMenuPage);
+
+    m_configMenuPage= new ConfigMenuPage(this);
+    m_rightStackedWidget->addWidget(m_configMenuPage);
 
 }
 

@@ -12,7 +12,6 @@ RightTopWidget::RightTopWidget(QWidget *parent)
 {
     setupUI();
 
-
 }
 
 

@@ -3,11 +3,11 @@
 #include <QString>
 
 namespace Menu {
-    enum class MenuType{
-        Close,
-        Max,
-        Min
-    };
+enum class MenuType{
+    Close,
+    Max,
+    Min
+};
 inline QString toString(MenuType menuType){
     switch (menuType) {
     case MenuType::Close:
@@ -24,10 +24,16 @@ inline QString toString(MenuType menuType){
     }
 }
 
- inline QString intToString(int menuType){
-     return toString(static_cast<MenuType>(menuType));
- }
+inline QString intToString(int menuType){
+    return toString(static_cast<MenuType>(menuType));
+}
 
+enum class LeftMenu{
+    KeyManager,
+    DataSummar,
+    MonitorMenu,
+    ConfigMenu
+};
 
 };
 
