@@ -19,6 +19,7 @@ void RightTopWidget::setupUI()
 {
 
     QHBoxLayout *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(10,10,10,10);
     // layout->setSpacing(5);
     layout->addStretch();
     QPushButton *btnMin = createRightMenuIconBtn(":/images/icons/icon-min.png",Menu::MenuType::Min);

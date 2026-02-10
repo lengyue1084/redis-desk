@@ -30,6 +30,8 @@ public:
     static QFont getTitleFont(const QWidget* widget);
 
     static QFont getTitleMenuFont(const QWidget* widget);
+
+    static QFont getRithtTitleMenuFont(const QWidget* widget);
     
     // 获取正文字体
     static QFont getTextFont(const QWidget* widget);

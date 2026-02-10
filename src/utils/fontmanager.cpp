@@ -76,6 +76,13 @@ QFont FontManager::getTitleMenuFont(const QWidget* widget) {
     return font;
 }
 
+QFont FontManager::getRithtTitleMenuFont(const QWidget* widget) {
+    QFont font;
+    font.setPointSize(getTitleMenuFontSize(widget));
+    font.setBold(true);
+    return font;
+}
+
 
 QFont FontManager::getTextFont(const QWidget* widget) {
     QFont font;

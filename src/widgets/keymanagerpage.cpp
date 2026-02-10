@@ -28,22 +28,25 @@ void KeyManagerPage::setupUI()
     
     QHBoxLayout *topLayout = new QHBoxLayout(topWidget);
     topLayout->setAlignment(Qt::AlignTop);
-    topLayout->setContentsMargins(10, 10, 10, 10); // 添加适当的边距
+    topLayout->setContentsMargins(0, 0, 0, 0); // 添加适当的边距
     
     QLabel *leftTitle = new QLabel(topWidget);
     leftTitle->setText("键值管理");
+    leftTitle->setFont(FontManager::getRithtTitleMenuFont(this));
     leftTitle->setProperty("class","title-white");
     topLayout->addWidget(leftTitle);
     
     topLayout->addStretch();
     
     QPushButton *addBtn = new QPushButton("添加",topWidget);
+    addBtn->setIcon(QIcon(":/images/icons/icon-plus.png"));
     addBtn->setObjectName("addButton");
     QFont addBtnFont = FontManager::getTextFont(topWidget);
     addBtn->setFont(addBtnFont);
     topLayout->addWidget(addBtn);
     
     QPushButton *refreshBtn = new QPushButton("刷新",topWidget);
+    refreshBtn->setIcon(QIcon(":/images/icons/icon-refresh.png"));
     refreshBtn->setObjectName("refreshButton");
     // 设置自适应字体
     QFont font = FontManager::getTextFont(topWidget);

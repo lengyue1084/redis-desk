@@ -1,9 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>images/bg.png</file>
-        <file>images/icons/about.png</file>
-        <file>images/icons/client.png</file>
-        <file>images/icons/query.png</file>
         <file>images/icons/icon-plus.png</file>
         <file>images/icons/icon-export.png</file>
         <file>images/icons/icon-import.png</file>
@@ -16,5 +13,6 @@
         <file>images/icons/icon-close.png</file>
         <file>images/icons/icon-max.png</file>
         <file>images/icons/icon-min.png</file>
+        <file>images/icons/icon-refresh.png</file>
     </qresource>
 </RCC>

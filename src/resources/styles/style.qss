@@ -91,9 +91,8 @@ QPushButton#connectNewPushButton:hover {
 }
 
 QLabel[class="title-white"]{
-   color:rgba(156,163,175,1);
-   font-size:14px;
-   font-weight:500;
+   color:rgba(255,255,255,1);
+   font-weight:bold;
 }
 
 QListView#connectListView{
@@ -162,31 +161,6 @@ QScrollBar#connectListView::handle:vertical {
     min-height: 30px;
 }
 
-/*QScrollBar::handle:vertical:hover {
-    background: #a8a8a8;
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
-}*/
-
-/*QPushButton#connectNewPushButton:pressed {
-    background: rgba(123, 29, 207, 1);
-    box-shadow: 0px 2px 6px rgba(147, 51, 234, 0.4);
-}*/
-
-/*.hover\:shadow-lg:hover {
-    --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
-    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-}
-
-<style>
-.hover\:bg-purple-700:hover {
-    --tw-bg-opacity: 1;
-    background-color: rgb(126 34 206 / var(--tw-bg-opacity, 1));
-}*/
-
 
 QPushButton#settingPushButton,
 QPushButton#importPushButton,
@@ -205,8 +179,6 @@ QPushButton#settingPushButton:hover,
 QPushButton#importPushButton:hover,
 QPushButton#exportPushButton:hover {
     background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
-    /*border: 1px solid rgba(194, 130, 255, 1);*/
-   /* box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3); *//* 增强的阴影效果 */
 }
 
 
@@ -218,6 +190,7 @@ QPushButton.left-menu-btn{
     padding-right:10px;
     background-color: rgba(31,41,55,1);
     border:none;
+    border-radius: 6px;
 
 }
 
@@ -242,18 +215,9 @@ QPushButton.left-menu-btn-selected{
     padding-left:10px;
     padding-right:10px;
     border:none;
+    border-radius: 6px;
 }
 
-
-QPushButton.left-menu-btn-selected{
-    background-color: rgba(147, 51, 234, 1);
-    color: rgb(209, 213, 219);
-    height:40px;
-    text-align: left;
-    padding-left:10px;
-    padding-right:10px;
-    border:none;
-}
 
 
 QPushButton.right-top-menu-btn{
@@ -301,6 +265,11 @@ QPushButton#refreshButton {
 
 QPushButton#refreshButton:hover {
     background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
+}
+
+QPushButton#addButton,#refreshButton{
+  min-width:80px;
+
 }
 
 
