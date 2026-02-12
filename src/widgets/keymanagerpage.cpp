@@ -3,6 +3,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QComboBox>
+#include <QLineEdit>
 #include "utils/fontmanager.h"
 #include "widgets/keymanagerpage.h"
 KeyManagerPage::KeyManagerPage(QWidget *parent)
@@ -11,7 +13,6 @@ KeyManagerPage::KeyManagerPage(QWidget *parent)
     setupUI();
 }
 KeyManagerPage::~KeyManagerPage()
-
 {
 
 }
@@ -37,6 +38,32 @@ void KeyManagerPage::setupUI()
     topLayout->addWidget(leftTitle);
     
     topLayout->addStretch();
+    QLineEdit *searchLineEdit = new QLineEdit(this);
+    searchLineEdit->setObjectName("searchLineEdit");
+    searchLineEdit->setPlaceholderText("请输入key值...");
+    topLayout->addWidget(searchLineEdit);
+
+    QComboBox *keyTypeComboBox = new QComboBox(topWidget);
+    keyTypeComboBox->setObjectName("keyTypeComboBox");
+    keyTypeComboBox->setContentsMargins(0,0,0,0);
+    keyTypeComboBox->setProperty("class","keyPageSearchComboBox");
+    QStringList itemsList = {"所有类型","String","Hash","List","Set","ZSet"};
+    keyTypeComboBox->addItems(itemsList);
+    QFont keyTypeComboBoxFont = FontManager::getTextFont(topWidget);
+    keyTypeComboBox->setFont(keyTypeComboBoxFont);
+    topLayout->addWidget(keyTypeComboBox);
+
+
+    QComboBox *dbComboBox = new QComboBox(topWidget);
+    dbComboBox->setObjectName("dbComboBox");
+    dbComboBox->setContentsMargins(0,0,0,0);
+    dbComboBox->setProperty("class","keyPageSearchComboBox");
+    for (int var = 0; var < 16; ++var) {
+        dbComboBox->addItem(QString("db %1").arg(var));
+    }
+    QFont dbComboBoxFont = FontManager::getTextFont(topWidget);
+    dbComboBox->setFont(dbComboBoxFont);
+    topLayout->addWidget(dbComboBox);
     
     QPushButton *addBtn = new QPushButton("添加",topWidget);
     addBtn->setIcon(QIcon(":/images/icons/icon-plus.png"));
@@ -52,6 +79,9 @@ void KeyManagerPage::setupUI()
     QFont font = FontManager::getTextFont(topWidget);
     refreshBtn->setFont(font);
     topLayout->addWidget(refreshBtn);
+
+
+
 
     layout->addWidget(topWidget);
     // 确保topWidget下方没有拉伸，使其保持在顶部

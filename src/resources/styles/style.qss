@@ -23,29 +23,6 @@ QSplitter#mainSplitter {
 
 }
 
-/* width水平分割器的手柄宽度 */
-/* height垂直分割器的手柄高度 */
-/*QSplitter#mainSplitter::handle {
-       background-color: #cccccc;
-       width: 1px;
-       height: 1px;
-       border: 1px solid #ffffff;
-       border-radius: 3px;
-       margin: 0px;
-   }*/
-
-   /* 手柄悬停效果 */
-/*   QSplitter#mainSplitter::handle:hover {
-       background-color: #3498db;
-       border-color: #2980b9;
-   }*/
-
-   /* 手柄按下效果 */
-/*   QSplitter#mainSplitter::handle:pressed {
-       background-color: #2980b9;
-   }*/
-
-
 
 QWidget#leftContentQidget{
     background-color: rgba(31,41,55,1);
@@ -87,7 +64,6 @@ QPushButton#connectNewPushButton{
 QPushButton#connectNewPushButton:hover {
     background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
     border: 1px solid rgba(194, 130, 255, 1); /* 边框颜色变化 */
-    /*box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3);*/ /* 增强的阴影效果 */
 }
 
 QLabel[class="title-white"]{
@@ -255,7 +231,7 @@ QPushButton#addButton:hover {
 QPushButton#refreshButton {
    height: 30px;
    min-width:80px;
-   background: rgba(55,65,81,1);
+   background: rgba(147, 51, 234, 1);
    border-radius: 6px;
    color: #ffffff;
    padding: 3px 10px;
@@ -272,6 +248,47 @@ QPushButton#addButton,#refreshButton{
 
 }
 
+QComboBox.keyPageSearchComboBox{
+  width:60px;
+  padding: 3px 10px;
+  margin: 0px 5px;
+  height:30px;
+  background-color:rgba(31,41,55,1);
+  color:#ffffff;
+  font-weight:bold;
+
+}
+
+/* 设置下拉列表的宽度与组合框一致 */
+QComboBox.keyPageSearchComboBox QAbstractItemView {
+    width: 80px;  /* 与 comboBox 宽度一致 */
+    background-color:rgba(31,41,55,1);
+    color: #ffffff;
+    outline: none;
+    padding: 3px 10px;
+    margin: 0px 5px;
+}
+
+/* 可选：设置下拉列表项的样式 */
+QComboBox.keyPageSearchComboBox QAbstractItemView::item {
+    min-height: 25px;
+    padding: 5px;
+}
+
+QComboBox.keyPageSearchComboBox QAbstractItemView::item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+QLineEdit#searchLineEdit{
+    background-color:rgba(31,41,55,1);
+    height: 30px;
+    min-width:80px;
+    border-radius: 6px;
+    color: #ffffff;
+    padding: 3px 10px;
+    text-align: center;
+    margin: 0px 5px;
+}
 
 
 
