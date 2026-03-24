@@ -41,9 +41,11 @@ inline const QString& styleFilePath() {
 }
 
 namespace Icons {
-inline const QString& client() { static const QString icon = ":/images/icons/client.png"; return icon; }
-inline const QString& query() { static const QString icon = ":/images/icons/query.png"; return icon; }
-inline const QString& about() { static const QString icon = ":/images/icons/about.png"; return icon; }
+inline const QString& client() { static const QString icon = ":/images/icons/icon-client.png"; return icon; }
+inline const QString& clientActive() { static const QString icon = ":/images/icons/icon-client-active.png"; return icon; }
+inline const QString& plus() { static const QString icon = ":/images/icons/icon-plus.png"; return icon; }
+inline const QString& setting() { static const QString icon = ":/images/icons/icon-setting.png"; return icon; }
+inline const QString& refresh() { static const QString icon = ":/images/icons/icon-refresh.png"; return icon; }
 }
 
 // 菜单文本

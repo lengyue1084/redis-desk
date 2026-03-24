@@ -1,126 +1,192 @@
 #include "widgets/connectionpanel.h"
+#include "dialogs/connectiondialog.h"
+#include "utils/dpitools.h"
 #include <QLabel>
 #include <QVBoxLayout>
-#include <QStandardItemModel>
-#include <QDateTime>
-#include "utils/dpitools.h"
+#include <QMenu>
+#include <QMessageBox>
 
 ConnectionPanel::ConnectionPanel(QWidget *parent)
-    : QWidget(parent),m_connectListView(nullptr)
-    , m_connectionPanelDelegrate(new ConnectionPanelDelegrate(nullptr))
-    , m_listModel(nullptr)
-    , m_proxyModel(nullptr)
+    : QWidget(parent)
+    , m_connectListView(nullptr)
+    , m_connectionPanelDelegrate(new ConnectionPanelDelegrate(this))
+    , m_listModel(new QStandardItemModel(this))
+    , m_proxyModel(new QSortFilterProxyModel(this))
+    , m_currentClient(nullptr)
 {
-
-    m_connectionPanelDelegrate = new ConnectionPanelDelegrate(this);
-    m_listModel = new QStandardItemModel(this);
-    m_proxyModel = new QSortFilterProxyModel(this);
-    // 设置最小的宽高
-    //this->setMinimumSize(200, 100);  // 设置最小宽高
-    // 移除固定高度限制，使用更灵活的大小策略
-   //this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    // this->setMinimumHeight(100); // 只设置最小高度，不设置
-    // this->setMaximumHeight(100);
-    this->setFixedHeight(DpiTools::scaleValue(this, 100));
+    this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     setupUI();
-    setTestData();
-
+    loadConnections();
 }
 
-void ConnectionPanel::setTestData()
+ConnectionPanel::~ConnectionPanel() {}
+
+bool ConnectionPanel::isConnected() const
 {
-
-    m_listModel->clear();
-    // 添加测试连接数据
-    addTestConnection("本地 Redis", "127.0.0.1", 6379, "", 0, true);
-    addTestConnection("127.0.0.1:3306", "192.168.1.100", 6379, "test123", 1, true);
-    // addTestConnection("生产主库", "10.0.1.1", 6379, "prod_pass", 0, false);
-    // addTestConnection("生产从库", "10.0.1.2", 6379, "prod_pass", 0, false);
-    // addTestConnection("缓存集群-节点1", "redis-cluster-1.com", 6380, "", 0, false);
-    // addTestConnection("缓存集群-节点2", "redis-cluster-2.com", 6380, "", 0, false);
-    // addTestConnection("开发环境", "dev.redis.local", 6379, "", 2, true);
-    // addTestConnection("压测环境", "stress.redis.local", 6379, "stress_pass", 0, false);
-    // addTestConnection("哨兵模式", "sentinel.master.com", 26379, "", 0, false);
-    // addTestConnection("Docker容器", "localhost", 6381, "", 0, true);
-
-
-}
-
-void ConnectionPanel::addTestConnection(const QString &name,
-                                        const QString &host,
-                                        int port,
-                                        const QString &password,
-                                        int database,
-                                        bool isFavorite) {
-
-    QStandardItem *item = new QStandardItem();
-
-    // 设置显示文本
-    item->setText(name);
-
-    // 设置工具提示（显示详细信息）
-    QString tooltip = QString(
-                          "名称: %1\n"
-                          "地址: %2:%3\n"
-                          "数据库: %4\n"
-                          "密码: %6"
-                          ).arg(name)
-                          .arg(host)
-                          .arg(port)
-                          .arg(database)
-                          .arg(password.isEmpty() ? "无" : "已设置");
-
-    item->setToolTip(tooltip);
-
-    // 设置自定义数据（使用 UserRole + n 存储不同类型的数据）
-     item->setData(name, Qt::DisplayRole);                         // 显示名称
-    item->setData(QString("%1:%2").arg(host).arg(port), Qt::UserRole + 1);  // 地址
-    item->setData(database, Qt::UserRole + 2);                    // 数据库索引
-    item->setData(QDateTime::currentDateTime(), Qt::UserRole + 3);// 最后使用时间
-    //item->setData(static_cast<int>(status), Qt::UserRole + 4);    // 连接状态
-    item->setData(isFavorite, Qt::UserRole + 5);                  // 是否收藏
-
-    QIcon icon(":/images/icons/icon-setting.png");
-    //QIcon icon = QIcon(":/images/icons/icon-setting.png");
-    item->setIcon(icon);
-
-    // 根据状态设置图标
-    // QIcon statusIcon = getStatusIcon(status);
-    // item->setIcon(statusIcon);
-
-    // 根据收藏状态设置文本颜色
-    // if (isFavorite) {
-    //     item->setForeground(QBrush(QColor("#FF6B00")));  // 橙色表示收藏
-    // }
-
-    // 添加到模型
-    m_listModel->appendRow(item);
-}
-ConnectionPanel::~ConnectionPanel()
-{
-
+    return m_currentClient && m_currentClient->isConnected();
 }
 
 void ConnectionPanel::setupUI()
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
     m_connectListView = new QListView(this);
     layout->addWidget(m_connectListView);
     m_connectListView->setObjectName("connectListView");
     m_connectListView->setItemDelegate(m_connectionPanelDelegrate);
-    m_connectListView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    // m_listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    // m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
-    // m_listView->setContextMenuPolicy(Qt::CustomContextMenu);
-    // m_listView->setAlternatingRowColors(true);
+    m_connectListView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_connectListView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_connectListView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_connectListView->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    // 模型
     m_proxyModel->setSourceModel(m_listModel);
-    //m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    //m_proxyModel->setFilterKeyColumn(0);
-
     m_connectListView->setModel(m_proxyModel);
 
+    connect(m_connectListView, &QListView::doubleClicked,
+            this, &ConnectionPanel::onItemDoubleClicked);
 
+    connect(m_connectListView, &QWidget::customContextMenuRequested,
+            this, [this](const QPoint &pos) {
+        QModelIndex index = m_connectListView->indexAt(pos);
+        QMenu menu;
+        menu.setStyleSheet(
+            "QMenu { background-color: rgb(31,41,55); color: white; border: 1px solid rgb(75,85,99); }"
+            "QMenu::item:selected { background-color: rgba(147,51,234,1); }");
 
+        if (index.isValid()) {
+            QString connId = index.data(Qt::UserRole + 10).toString();
+            menu.addAction(QStringLiteral("连接"), this, [this, index]() {
+                onItemDoubleClicked(index);
+            });
+            menu.addAction(QStringLiteral("编辑"), this, [this, connId]() {
+                ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
+                if (cfg.id.isEmpty()) return;
+                ConnectionDialog dlg(cfg, this);
+                if (dlg.exec() == QDialog::Accepted) {
+                    ConnectionConfigManager::instance().updateConnection(dlg.connectionConfig());
+                    loadConnections();
+                }
+            });
+            menu.addSeparator();
+            menu.addAction(QStringLiteral("删除"), this, [this, connId]() {
+                if (QMessageBox::question(this, QStringLiteral("确认"),
+                        QStringLiteral("确定要删除此连接吗？")) == QMessageBox::Yes) {
+                    if (connId == m_currentConnectionId)
+                        disconnectCurrent();
+                    ConnectionConfigManager::instance().removeConnection(connId);
+                    loadConnections();
+                }
+            });
+        } else {
+            menu.addAction(QStringLiteral("新建连接"), this, &ConnectionPanel::addNewConnection);
+        }
+        menu.exec(m_connectListView->mapToGlobal(pos));
+    });
+}
+
+void ConnectionPanel::loadConnections()
+{
+    m_listModel->clear();
+    auto conns = ConnectionConfigManager::instance().connections();
+    for (const ConnectionConfig &c : conns) {
+        auto *item = new QStandardItem();
+        item->setText(c.name);
+        QString tooltip = QString("名称: %1\n地址: %2:%3\n数据库: %4")
+                              .arg(c.name, c.host).arg(c.port).arg(c.database);
+        item->setToolTip(tooltip);
+        item->setData(c.name, Qt::DisplayRole);
+        item->setData(QString("%1:%2").arg(c.host).arg(c.port), Qt::UserRole + 1);
+        item->setData(c.database, Qt::UserRole + 2);
+        item->setData(c.id, Qt::UserRole + 10);
+
+        bool isActive = (c.id == m_currentConnectionId && isConnected());
+        item->setData(isActive, Qt::UserRole + 11);
+
+        QIcon icon(":/images/icons/icon-client.png");
+        item->setIcon(icon);
+        m_listModel->appendRow(item);
+    }
+
+    int rowCount = m_proxyModel->rowCount();
+    if (rowCount == 0) {
+        setFixedHeight(40);
+    } else {
+        QStyleOptionViewItem opt;
+        opt.widget = m_connectListView;
+        int rowH = m_connectionPanelDelegrate->sizeHint(opt, m_proxyModel->index(0, 0)).height();
+        int totalH = rowCount * rowH + 4;
+        int maxH = DpiTools::scaleValue(this, 200);
+        setFixedHeight(qMin(totalH, maxH));
+    }
+}
+
+void ConnectionPanel::refreshList()
+{
+    loadConnections();
+}
+
+void ConnectionPanel::addNewConnection()
+{
+    ConnectionDialog dlg(this);
+    if (dlg.exec() == QDialog::Accepted) {
+        ConnectionConfigManager::instance().addConnection(dlg.connectionConfig());
+        loadConnections();
+    }
+}
+
+void ConnectionPanel::onItemDoubleClicked(const QModelIndex &index)
+{
+    QString connId = index.data(Qt::UserRole + 10).toString();
+    if (connId.isEmpty()) return;
+
+    if (connId == m_currentConnectionId && isConnected())
+        return;
+
+    disconnectCurrent();
+
+    ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
+    if (cfg.id.isEmpty()) return;
+
+    connectToConfig(cfg);
+}
+
+void ConnectionPanel::connectToConfig(const ConnectionConfig &config)
+{
+    m_currentClient = new RedisClient(this);
+    m_currentConnectionId = config.id;
+
+    connect(m_currentClient, &RedisClient::connected, this, [this]() {
+        loadConnections();
+        emit connectionEstablished(m_currentClient);
+    });
+
+    connect(m_currentClient, &RedisClient::errorOccurred, this, [this](const QString &err) {
+        emit connectionError(err);
+    });
+
+    connect(m_currentClient, &RedisClient::disconnected, this, [this]() {
+        emit connectionLost();
+        loadConnections();
+    });
+
+    m_currentClient->connectToServer(config.host, config.port,
+                                     config.password, config.database);
+}
+
+void ConnectionPanel::autoConnectFirst()
+{
+    auto conns = ConnectionConfigManager::instance().connections();
+    if (conns.isEmpty()) return;
+    connectToConfig(conns.first());
+}
+
+void ConnectionPanel::disconnectCurrent()
+{
+    if (m_currentClient) {
+        m_currentClient->disconnectFromServer();
+        m_currentClient->deleteLater();
+        m_currentClient = nullptr;
+        m_currentConnectionId.clear();
+        loadConnections();
+    }
 }

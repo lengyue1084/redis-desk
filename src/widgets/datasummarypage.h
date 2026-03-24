@@ -1,6 +1,13 @@
 #ifndef DATASUMMARYPAGE_H
 #define DATASUMMARYPAGE_H
+
 #include <QWidget>
+#include <QLabel>
+#include <QPushButton>
+#include <QTimer>
+#include <QMap>
+#include "redis/redisclient.h"
+
 class DataSummaryPage : public QWidget
 {
     Q_OBJECT
@@ -8,8 +15,44 @@ public:
     explicit DataSummaryPage(QWidget *parent = nullptr);
     ~DataSummaryPage();
 
-public:
+    void setClient(RedisClient *client);
+    void clearAll();
+
+private:
     void setupUI();
+    void refresh();
+    void parseInfo(const QString &infoStr);
+    QWidget *createStatCard(const QString &title, const QString &objectName,
+                            const QString &iconText, QWidget *parent);
+
+    RedisClient *m_client = nullptr;
+    QTimer *m_refreshTimer;
+
+    // Stat labels
+    QLabel *m_totalKeysValue;
+    QLabel *m_totalKeysDetail;
+    QLabel *m_memoryValue;
+    QLabel *m_memoryDetail;
+    QLabel *m_clientsValue;
+    QLabel *m_clientsDetail;
+    QLabel *m_versionValue;
+    QLabel *m_versionDetail;
+
+    // Info display
+    QLabel *m_uptimeLabel;
+    QLabel *m_roleLabel;
+    QLabel *m_osLabel;
+    QLabel *m_opsLabel;
+
+    // Key type distribution
+    QLabel *m_stringCount;
+    QLabel *m_hashCount;
+    QLabel *m_listCount;
+    QLabel *m_setCount;
+    QLabel *m_zsetCount;
+
+    QPushButton *m_refreshBtn;
+    QMap<QString, QString> m_infoMap;
 };
 
 #endif // DATASUMMARYPAGE_H

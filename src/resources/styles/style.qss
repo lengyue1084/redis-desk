@@ -1,4 +1,4 @@
-/* 自定义标题栏样式 */
+/* 主窗口 */
 QMainWindow{
     background: transparent;
     padding: 0px;
@@ -13,30 +13,24 @@ QWidget#centralWidget{
     background-color: rgba(17, 24, 39, 1);
     margin: 0px;
     padding: 0px;
-    /*border-radius:15px;*/
 }
 
 QSplitter#mainSplitter {
     margin: 0px;
     padding: 0px;
     width: 0px;
-
 }
-
 
 QWidget#leftContentQidget{
     background-color: rgba(31,41,55,1);
     margin: 0px;
     padding: 0px;
     color:rgb(156, 163, 175);
-
 }
 
 QWidget#leftopWidget{
-/*    color:rgb(156, 163, 175);*/
     margin:0px;
     padding:0px;
-
 }
 
 QLabel#titleLabel{
@@ -46,9 +40,9 @@ QLabel#titleLabel{
    color: rgba(168,85,247,1);
    min-height:32px;
    margin:0px 0px 10px 0px;
-
 }
 
+/* 新建连接按钮 */
 QPushButton#connectNewPushButton{
    height: 30px;
    min-width:120px;
@@ -58,12 +52,11 @@ QPushButton#connectNewPushButton{
    padding: 3px 0px;
    text-align: center;
    margin: 0px;
-   qproperty-iconSpacing: 8px; /* 设置图标与文字间距 */
 }
 
 QPushButton#connectNewPushButton:hover {
-    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
-    border: 1px solid rgba(194, 130, 255, 1); /* 边框颜色变化 */
+    background: rgba(171, 83, 255, 1);
+    border: 1px solid rgba(194, 130, 255, 1);
 }
 
 QLabel[class="title-white"]{
@@ -71,6 +64,7 @@ QLabel[class="title-white"]{
    font-weight:bold;
 }
 
+/* 连接列表 */
 QListView#connectListView{
    padding:0px;
    margin:0px;
@@ -79,7 +73,6 @@ QListView#connectListView{
    border:none;
 }
 
-/* 单个项目样式 */
 QListView#connectListView::item {
     min-height: 40px;
     width:100%;
@@ -87,57 +80,66 @@ QListView#connectListView::item {
     margin: 0px;
     border: 0px solid transparent;
     border-radius: 6px;
-    background: red;
+    background-color: rgba(31,41,55,1);
     font-size:16px;
 }
 
-/* 鼠标悬停效果 */
 QListView#connectListView::item:hover {
-/*    background-color: #e8f4ff;*/
     border: 0px solid #b3d9ff;
-    background-color: red;
+    background-color: rgba(55,65,81,1);
 }
 
-/* 选中状态 */
 QListView#connectListView::item:selected {
-/*    background-color: #374151;*/
     border: 0px solid #374151;
     color: white;
-    background:red;
+    background-color: rgba(147,51,234,0.3);
 }
 
-/* 选中但未激活状态 */
-/*QListView#connectListView::item:selected:!active {
-    background-color: #374151;
-    color: #333;
-}*/
-
-/* 交替行颜色 */
 QListView#connectListView::item:alternate {
     background-color: #374151;
 }
 
-/* 禁用状态 */
 QListView#connectListView::item:disabled {
     color: #999;
     background-color: #f0f0f0;
 }
 
-/* 滚动条样式 */
-QScrollBar#connectListView:vertical {
+/* 滚动条 */
+QScrollBar:vertical {
     border: none;
-    background: #374151;
-    width: 10px;
+    background: rgb(17,24,39);
+    width: 8px;
     margin: 0px;
 }
 
-QScrollBar#connectListView::handle:vertical {
-    background: #c1c1c1;
-    border-radius: 5px;
+QScrollBar::handle:vertical {
+    background: rgb(75,85,99);
+    border-radius: 4px;
     min-height: 30px;
 }
 
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
 
+QScrollBar:horizontal {
+    border: none;
+    background: rgb(17,24,39);
+    height: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background: rgb(75,85,99);
+    border-radius: 4px;
+    min-width: 30px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+/* 工具栏按钮 */
 QPushButton#settingPushButton,
 QPushButton#importPushButton,
 QPushButton#exportPushButton
@@ -148,16 +150,15 @@ QPushButton#exportPushButton
    padding:0px;
    margin:0px;
    background:rgba(55,65,81,1);
-
 }
 
 QPushButton#settingPushButton:hover,
 QPushButton#importPushButton:hover,
 QPushButton#exportPushButton:hover {
-    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
+    background: rgba(171, 83, 255, 1);
 }
 
-
+/* 左侧菜单按钮 */
 QPushButton.left-menu-btn{
     color: rgb(209, 213, 219);
     height:40px;
@@ -167,21 +168,17 @@ QPushButton.left-menu-btn{
     background-color: rgba(31,41,55,1);
     border:none;
     border-radius: 6px;
-
 }
 
 QPushButton.left-menu-btn::icon{
     padding-left:0px;
     padding-right:0px;
     margin-right:20px;
-
 }
 
 QPushButton.left-menu-btn:hover{
     background-color: rgba(147, 51, 234, 1);
-
 }
-
 
 QPushButton.left-menu-btn-selected{
     background-color: rgba(147, 51, 234, 1);
@@ -194,8 +191,7 @@ QPushButton.left-menu-btn-selected{
     border-radius: 6px;
 }
 
-
-
+/* 右侧顶部按钮 */
 QPushButton.right-top-menu-btn{
     background-color: rgba(147, 51, 234, 1);
     color: rgb(209, 213, 219);
@@ -205,13 +201,11 @@ QPushButton.right-top-menu-btn{
     border-radius: 50%;
 }
 
-
 QPushButton.right-top-menu-btn:hover {
    background-color: rgba(171, 83, 255, 1);
-/*   box-shadow: 0px 4px 12px rgba(147, 51, 234, 0.3);*/
-
 }
 
+/* 添加/刷新按钮 */
 QPushButton#addButton {
    height: 30px;
    min-width:80px;
@@ -221,11 +215,12 @@ QPushButton#addButton {
    padding: 3px 10px;
    text-align: center;
    margin: 0px 5px;
+   border: none;
 }
 
 QPushButton#addButton:hover {
-    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
-    border: 1px solid rgba(194, 130, 255, 1); /* 边框颜色变化 */
+    background: rgba(171, 83, 255, 1);
+    border: 1px solid rgba(194, 130, 255, 1);
 }
 
 QPushButton#refreshButton {
@@ -237,17 +232,14 @@ QPushButton#refreshButton {
    padding: 3px 10px;
    text-align: center;
    margin: 0px 5px;
+   border: none;
 }
 
 QPushButton#refreshButton:hover {
-    background: rgba(171, 83, 255, 1); /* 明显的背景色变化 */
+    background: rgba(171, 83, 255, 1);
 }
 
-QPushButton#addButton,#refreshButton{
-  min-width:80px;
-
-}
-
+/* 搜索框和下拉框 */
 QComboBox.keyPageSearchComboBox{
   width:60px;
   padding: 3px 10px;
@@ -256,20 +248,20 @@ QComboBox.keyPageSearchComboBox{
   background-color:rgba(31,41,55,1);
   color:#ffffff;
   font-weight:bold;
-
+  border: 1px solid rgb(55,65,81);
+  border-radius: 4px;
 }
 
-/* 设置下拉列表的宽度与组合框一致 */
 QComboBox.keyPageSearchComboBox QAbstractItemView {
-    width: 80px;  /* 与 comboBox 宽度一致 */
+    width: 80px;
     background-color:rgba(31,41,55,1);
     color: #ffffff;
     outline: none;
     padding: 3px 10px;
     margin: 0px 5px;
+    border: 1px solid rgb(55,65,81);
 }
 
-/* 可选：设置下拉列表项的样式 */
 QComboBox.keyPageSearchComboBox QAbstractItemView::item {
     min-height: 25px;
     padding: 5px;
@@ -288,10 +280,153 @@ QLineEdit#searchLineEdit{
     padding: 3px 10px;
     text-align: center;
     margin: 0px 5px;
+    border: 1px solid rgb(55,65,81);
 }
 
+QLineEdit#searchLineEdit:focus{
+    border: 1px solid rgba(147,51,234,1);
+}
 
+/* 通用 QToolTip */
+QToolTip {
+    background-color: rgb(31,41,55);
+    color: white;
+    border: 1px solid rgb(75,85,99);
+    padding: 4px;
+    border-radius: 4px;
+}
 
+/* 通用 QMenu 深色样式 */
+QMenu {
+    background-color: rgb(31,41,55);
+    color: white;
+    border: 1px solid rgb(75,85,99);
+    border-radius: 6px;
+    padding: 4px;
+}
 
+QMenu::item {
+    padding: 6px 24px 6px 12px;
+    border-radius: 4px;
+}
 
+QMenu::item:selected {
+    background-color: rgba(147,51,234,1);
+}
 
+QMenu::separator {
+    height: 1px;
+    background: rgb(55,65,81);
+    margin: 4px 8px;
+}
+
+/* 统一 QMessageBox 深色样式 */
+QMessageBox {
+    background-color: rgb(17,24,39);
+    color: white;
+}
+
+QMessageBox QLabel {
+    color: white;
+    font-size: 13px;
+    min-width: 180px;
+    max-width: 360px;
+}
+
+QMessageBox QPushButton {
+    background-color: rgba(147,51,234,1);
+    color: white;
+    border-radius: 6px;
+    padding: 8px 24px;
+    border: none;
+    font-weight: bold;
+    min-width: 80px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: rgba(171,83,255,1);
+}
+
+/* 统一 QDialog 基础样式 */
+QDialog {
+    background-color: rgb(17,24,39);
+    color: white;
+}
+
+/* 统一 QFileDialog 深色样式 */
+QFileDialog {
+    background-color: rgb(17,24,39);
+    color: white;
+}
+
+QFileDialog QLabel {
+    color: rgb(156,163,175);
+}
+
+QFileDialog QLineEdit {
+    background-color: rgb(31,41,55);
+    color: white;
+    border: 1px solid rgb(55,65,81);
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QFileDialog QComboBox {
+    background-color: rgb(31,41,55);
+    color: white;
+    border: 1px solid rgb(55,65,81);
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QFileDialog QPushButton {
+    background-color: rgba(147,51,234,1);
+    color: white;
+    border-radius: 6px;
+    padding: 6px 16px;
+    border: none;
+    min-width: 70px;
+}
+
+QFileDialog QPushButton:hover {
+    background-color: rgba(171,83,255,1);
+}
+
+QFileDialog QTreeView, QFileDialog QListView {
+    background-color: rgb(31,41,55);
+    color: white;
+    border: 1px solid rgb(55,65,81);
+    border-radius: 4px;
+}
+
+QFileDialog QTreeView::item:hover, QFileDialog QListView::item:hover {
+    background-color: rgba(55,65,81,1);
+}
+
+QFileDialog QTreeView::item:selected, QFileDialog QListView::item:selected {
+    background-color: rgba(147,51,234,0.3);
+}
+
+QFileDialog QHeaderView::section {
+    background-color: rgb(17,24,39);
+    color: rgb(156,163,175);
+    border: none;
+    padding: 4px;
+}
+
+/* 折叠侧栏按钮 */
+QPushButton#collapseSidebarBtn {
+    background-color: transparent;
+    color: rgb(107,114,128);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 6px;
+    text-align: right;
+    font-size: 11px;
+    height: 22px;
+}
+
+QPushButton#collapseSidebarBtn:hover {
+    background-color: rgba(55,65,81,0.6);
+    color: rgb(168,85,247);
+}

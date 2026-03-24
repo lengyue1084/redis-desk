@@ -1,7 +1,6 @@
 #include "widgets/leftmenupanel.h"
 #include <QVBoxLayout>
 #include <QStyle>
-//#include "utils/dpitools.h"
 #include "utils/fontmanager.h"
 #include "constants/constants.h"
 #include "utils/commonhelper.h"
@@ -21,10 +20,9 @@ LeftMenuPanel::~LeftMenuPanel()
 
 void LeftMenuPanel::setupUI()
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(10,0,10,0);
-    layout->setSpacing(10);
-
+    m_layout = new QVBoxLayout(this);
+    m_layout->setContentsMargins(10,0,10,0);
+    m_layout->setSpacing(10);
 
     m_keyManagerMenuPushButton = createMenuButton("键值管理",":/images/icons/icon-key.png",Menu::LeftMenu::KeyManager);
     m_menuButtonList.append(m_keyManagerMenuPushButton);
@@ -35,12 +33,49 @@ void LeftMenuPanel::setupUI()
     m_configMenuPushButton= createMenuButton("配置管理",":/images/icons/icon-setting.png",Menu::LeftMenu::ConfigMenu);
     m_menuButtonList.append(m_configMenuPushButton);
     foreach (QPushButton *button, m_menuButtonList) {
-        layout->addWidget(button);
+        m_layout->addWidget(button);
         connect(button,&QPushButton::clicked,this,&LeftMenuPanel::onMenuButtonClicked);
     }
     selectMenuButton(m_keyManagerMenuPushButton);
+}
 
+void LeftMenuPanel::setCollapsed(bool collapsed)
+{
+    m_collapsed = collapsed;
 
+    if (collapsed) {
+        m_layout->setContentsMargins(2, 0, 2, 0);
+        m_layout->setSpacing(6);
+    } else {
+        m_layout->setContentsMargins(10, 0, 10, 0);
+        m_layout->setSpacing(10);
+    }
+
+    for (QPushButton *btn : m_menuButtonList) {
+        if (collapsed) {
+            if (m_originalIconSize == 0)
+                m_originalIconSize = btn->iconSize().width();
+            m_buttonTexts[btn] = btn->text();
+            btn->setText(QString());
+            btn->setToolTip(m_buttonTexts[btn]);
+            btn->setIconSize(QSize(20, 20));
+            btn->setFixedSize(40, 40);
+            btn->setStyleSheet(
+                "QPushButton { text-align: center; padding: 0px; }");
+        } else {
+            if (m_buttonTexts.contains(btn))
+                btn->setText(m_buttonTexts[btn]);
+            btn->setToolTip(QString());
+            int iconSz = m_originalIconSize > 0 ? m_originalIconSize : 20;
+            btn->setIconSize(QSize(iconSz, iconSz));
+            btn->setMinimumSize(0, 0);
+            btn->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            btn->setFixedHeight(40);
+            btn->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+            btn->setStyleSheet(QString());
+            updateStyle(btn);
+        }
+    }
 }
 
 void LeftMenuPanel::onMenuButtonClicked(){
@@ -48,7 +83,6 @@ void LeftMenuPanel::onMenuButtonClicked(){
     if(!button) return;
     selectMenuButton(button);
 }
-
 
 QPushButton* LeftMenuPanel::createMenuButton(const QString &text,const QString &iconPath,Menu::LeftMenu leftMenu)
 {
@@ -63,14 +97,13 @@ QPushButton* LeftMenuPanel::createMenuButton(const QString &text,const QString &
     pushButton->setFont(m_menuFontSize);
     pushButton->setCheckable(true);
     pushButton->setChecked(false);
+    m_buttonTexts[pushButton] = text;
     return pushButton;
-
 }
 
 void LeftMenuPanel::selectMenuButton(QPushButton *clickButton)
 {
     qDebug()<< "clickButton:" << clickButton;
-    //qDebug()<< "clickButton:" << clickButton->property("menu-index").toInt();
     m_currentMenuButton = clickButton;
     QList<QPushButton*> menulist = findChildren<QPushButton *>();
     foreach (QPushButton *button, menulist) {
@@ -85,13 +118,11 @@ void LeftMenuPanel::selectMenuButton(QPushButton *clickButton)
         updateStyle(button);
     }
     emit menuClicked(clickButton->property("menu-index").toInt());
-
 }
 
 void LeftMenuPanel::updateStyle(QPushButton *button)
 {
     CommonHelper::refreshStyle(button);
-
 }
 
 QPushButton* LeftMenuPanel::getSelectedButton()
@@ -103,13 +134,4 @@ QPushButton* LeftMenuPanel::getSelectedButton()
         }
     }
     return nullptr;
-
 }
-
-// void LeftMenuPanel::changeRightContentWidget(int menuIndex)
-// {
-//     qDebug() << "btn intdex :" << menuIndex;
-
-
-// }
-

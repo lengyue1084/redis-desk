@@ -2,6 +2,7 @@
 #define LEFTMENUPANEL_H
 #include <QWidget>
 #include <QPushButton>
+#include <QVBoxLayout>
 #include "constants/enums.h"
 class LeftMenuPanel : public QWidget
 {
@@ -9,6 +10,8 @@ class LeftMenuPanel : public QWidget
 public:
     explicit LeftMenuPanel(QWidget *parent = nullptr);
     ~LeftMenuPanel();
+
+    void setCollapsed(bool collapsed);
 
 signals:
     void menuClicked(int menuIndex);
@@ -20,10 +23,12 @@ private:
     QPushButton *m_configMenuPushButton;
     QFont m_menuFontSize;
     QList<QPushButton*> m_menuButtonList;
-    // 当前选中的左侧餐单
     QPushButton *m_currentMenuButton;
     int m_iconWidth;
-
+    bool m_collapsed = false;
+    QMap<QPushButton*, QString> m_buttonTexts;
+    QVBoxLayout *m_layout = nullptr;
+    int m_originalIconSize = 0;
 
 private:
     void setupUI();

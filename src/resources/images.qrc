@@ -14,5 +14,7 @@
         <file>images/icons/icon-max.png</file>
         <file>images/icons/icon-min.png</file>
         <file>images/icons/icon-refresh.png</file>
+        <file>images/icons/icon-chevron-left.svg</file>
+        <file>images/icons/icon-chevron-right.svg</file>
     </qresource>
 </RCC>

@@ -6,32 +6,44 @@
 #include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 #include "delegates/connectionpanel/connectionpaneldelegate.h"
+#include "models/connectionconfig.h"
+#include "redis/redisclient.h"
 
 class ConnectionPanel : public QWidget
 {
-   Q_OBJECT
+    Q_OBJECT
 public:
     explicit ConnectionPanel(QWidget *parent = nullptr);
     ~ConnectionPanel();
 
+    RedisClient *currentClient() const { return m_currentClient; }
+    bool isConnected() const;
+    QString currentConnectionId() const { return m_currentConnectionId; }
+
+    void refreshList();
+
+signals:
+    void connectionEstablished(RedisClient *client);
+    void connectionLost();
+    void connectionError(const QString &error);
+
+public slots:
+    void addNewConnection();
+    void onItemDoubleClicked(const QModelIndex &index);
+    void disconnectCurrent();
+    void autoConnectFirst();
+
 private:
     void setupUI();
+    void loadConnections();
+    void connectToConfig(const ConnectionConfig &config);
 
-public:
     QListView *m_connectListView;
     ConnectionPanelDelegrate *m_connectionPanelDelegrate;
     QStandardItemModel *m_listModel;
     QSortFilterProxyModel *m_proxyModel;
-
-public:
-    void setTestData();
-    void addTestConnection(const QString &name,
-                                            const QString &host,
-                                            int port,
-                                            const QString &password,
-                                            int database,
-                           bool isFavorite);
-    void adjustPanelHeight();
-
+    RedisClient *m_currentClient;
+    QString m_currentConnectionId;
 };
+
 #endif // CONNECTIONPANEL_H

@@ -1,6 +1,7 @@
 // delegates/connectionpanel/connectionpaneldelegate.cpp
 #include "delegates/connectionpanel/connectionpaneldelegate.h"
 #include <QLineEdit>
+#include <QLinearGradient>
 #include "utils/fontmanager.h"
 
 ConnectionPanelDelegrate::ConnectionPanelDelegrate(QObject *parent)
@@ -29,21 +30,33 @@ ConnectionPanelDelegrate::ConnectionPanelDelegrate(QObject *parent)
 // 修改 ConnectionPanelDelegrate::paint() 方法
 void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                                      const QModelIndex &index) const {
-    // 绘制背景
     painter->save();
     QIcon icon(":/images/icons/icon-client.png");
-    // 检查选中状态
-    if ((option.state & QStyle::State_Selected) || (option.state & QStyle::State_MouseOver)) {
+
+    bool isActive = index.data(Qt::UserRole + 11).toBool();
+
+    if (isActive) {
         icon = QIcon(":/images/icons/icon-client-active.png");
+        painter->setRenderHint(QPainter::Antialiasing);
+        QRect bgRect = option.rect.adjusted(2, 1, -2, -1);
+        QLinearGradient gradient(bgRect.topLeft(), bgRect.topRight());
+        gradient.setColorAt(0.0, QColor(147, 51, 234, 40));
+        gradient.setColorAt(1.0, QColor(147, 51, 234, 18));
+        painter->setBrush(gradient);
+        painter->setPen(QPen(QColor(168, 85, 247, 140), 1));
+        painter->drawRoundedRect(bgRect, 6, 6);
 
-        // 选中背景：紫色高亮
-        painter->fillRect(option.rect, QColor(55, 65, 81, 50));
-    } /*else if (option.state & QStyle::State_MouseOver) {
-        // 悬停背景：淡紫色
-        painter->fillRect(option.rect, QColor(55, 65, 81, 50));
-    }*/ else {
-
-        // 默认背景
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(168, 85, 247));
+        painter->drawRoundedRect(QRect(option.rect.left(), option.rect.top() + 6,
+                                       3, option.rect.height() - 12), 1, 1);
+    } else if ((option.state & QStyle::State_Selected) || (option.state & QStyle::State_MouseOver)) {
+        icon = QIcon(":/images/icons/icon-client-active.png");
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setBrush(QColor(55, 65, 81, 80));
+        painter->setPen(Qt::NoPen);
+        painter->drawRoundedRect(option.rect.adjusted(2, 1, -2, -1), 6, 6);
+    } else {
         painter->fillRect(option.rect, option.palette.base());
     }
 
@@ -86,11 +99,13 @@ void ConnectionPanelDelegrate::paint(QPainter *painter, const QStyleOptionViewIt
 
     // 选中时文本为白色，否则使用系统文本色
     //QPen textPen = QPen(option.palette.text().color());
-    QPen textPen = QPen(QColor(243, 244, 246,50));
-    //rgb(243, 244, 246)
+    bool isActiveText = index.data(Qt::UserRole + 11).toBool();
+    QPen textPen = QPen(QColor(156, 163, 175));
 
-    if ((option.state & QStyle::State_Selected) || (option.state & QStyle::State_MouseOver)) {
-        textPen  = QPen(Qt::white);
+    if (isActiveText) {
+        textPen = QPen(QColor(243, 232, 255));
+    } else if ((option.state & QStyle::State_Selected) || (option.state & QStyle::State_MouseOver)) {
+        textPen = QPen(Qt::white);
     }
     painter->setPen(textPen);
     painter->drawText(textRect, Qt::AlignVCenter, text);
