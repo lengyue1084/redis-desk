@@ -223,6 +223,11 @@ QPushButton#addButton:hover {
     border: 1px solid rgba(194, 130, 255, 1);
 }
 
+QPushButton#addButton:disabled {
+    background: rgba(55, 65, 81, 1);
+    color: rgb(107, 114, 128);
+}
+
 QPushButton#refreshButton {
    height: 30px;
    min-width:80px;
@@ -237,6 +242,52 @@ QPushButton#refreshButton {
 
 QPushButton#refreshButton:hover {
     background: rgba(171, 83, 255, 1);
+}
+
+QPushButton#refreshButton:disabled {
+    background: rgba(55, 65, 81, 1);
+    color: rgb(107, 114, 128);
+}
+
+/* 加载更多/加载全部 底部栏按钮 */
+QPushButton#loadMoreBtn {
+    background: transparent;
+    color: rgb(168,85,247);
+    border: 1px solid rgb(168,85,247);
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 11px;
+    height: 22px;
+    min-width: 56px;
+}
+
+QPushButton#loadMoreBtn:hover {
+    background: rgba(168,85,247,0.15);
+}
+
+QPushButton#loadMoreBtn:disabled {
+    color: rgb(75,85,99);
+    border-color: rgb(55,65,81);
+}
+
+QPushButton#loadAllBtn {
+    background: rgba(147,51,234,1);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 11px;
+    height: 22px;
+    min-width: 56px;
+}
+
+QPushButton#loadAllBtn:hover {
+    background: rgba(171,83,255,1);
+}
+
+QPushButton#loadAllBtn:disabled {
+    background: rgb(55,65,81);
+    color: rgb(75,85,99);
 }
 
 /* 搜索框和下拉框 */

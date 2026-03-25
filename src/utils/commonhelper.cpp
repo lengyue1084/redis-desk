@@ -56,3 +56,14 @@ void CommonHelper::spinRefreshIcon(QPushButton *btn, int durationMs)
     anim->start();
 }
 
+bool CommonHelper::confirm(QWidget *parent, const QString &title, const QString &text,
+                           QMessageBox::Icon icon)
+{
+    QMessageBox box(icon, title, text, QMessageBox::NoButton, parent);
+    auto *yesBtn = box.addButton(QStringLiteral("是"), QMessageBox::YesRole);
+    box.addButton(QStringLiteral("否"), QMessageBox::NoRole);
+    box.setDefaultButton(qobject_cast<QPushButton*>(yesBtn));
+    box.exec();
+    return box.clickedButton() == yesBtn;
+}
+

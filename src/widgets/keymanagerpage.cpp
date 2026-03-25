@@ -9,6 +9,9 @@
 #include <QKeyEvent>
 #include <QResizeEvent>
 #include <QMap>
+#include <QVariantAnimation>
+#include <QJsonDocument>
+#include <QJsonParseError>
 #include <functional>
 
 KeyManagerPage::KeyManagerPage(QWidget *parent)
@@ -31,6 +34,10 @@ void KeyManagerPage::clearAll()
     m_client = nullptr;
     m_keyTree->clear();
     m_keyCountLabel->setText(QStringLiteral("未连接"));
+    m_loadMoreBtn->setEnabled(false);
+    m_loadMoreBtn->setText(QStringLiteral("加载更多"));
+    m_loadAllBtn->setEnabled(false);
+    m_loadAllBtn->setText(QStringLiteral("加载全部"));
     m_valueStack->setCurrentIndex(5);
     m_detailKeyLabel->clear();
     m_detailTypeLabel->clear();
@@ -126,6 +133,7 @@ void KeyManagerPage::setupUI()
     listWidget->setStyleSheet("background-color: rgb(17,24,39);");
     auto *listLayout = new QVBoxLayout(listWidget);
     listLayout->setContentsMargins(0, 4, 0, 0);
+    listLayout->setSpacing(0);
 
     m_keyTree = new QTreeWidget(listWidget);
     m_keyTree->setHeaderHidden(true);
@@ -143,19 +151,36 @@ void KeyManagerPage::setupUI()
         "QTreeWidget::branch:closed:has-children:has-siblings { image: none; border-image: none; }"
         "QTreeWidget::branch:open:has-children:!has-siblings,"
         "QTreeWidget::branch:open:has-children:has-siblings { image: none; border-image: none; }");
-    listLayout->addWidget(m_keyTree);
+    listLayout->addWidget(m_keyTree, 1);
 
-    auto *bottomBar = new QHBoxLayout;
-    m_keyCountLabel = new QLabel(QStringLiteral("未连接"), listWidget);
-    m_keyCountLabel->setStyleSheet("color: rgb(156,163,175); padding: 2px 4px;");
+    // Fixed bottom bar — always visible, pinned at bottom
+    auto *bottomWidget = new QWidget(listWidget);
+    bottomWidget->setFixedHeight(36);
+    bottomWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    bottomWidget->setStyleSheet(
+        "background-color: rgb(24,32,48); border-top: 1px solid rgb(55,65,81);");
+    auto *bottomBar = new QHBoxLayout(bottomWidget);
+    bottomBar->setContentsMargins(8, 4, 8, 4);
+    bottomBar->setSpacing(6);
+
+    m_loadMoreBtn = new QPushButton(QStringLiteral("加载更多"), bottomWidget);
+    m_loadMoreBtn->setObjectName("loadMoreBtn");
+    m_loadMoreBtn->setFont(FontManager::getTextFont(this));
+    m_loadMoreBtn->setCursor(Qt::PointingHandCursor);
+    bottomBar->addWidget(m_loadMoreBtn);
+
+    m_loadAllBtn = new QPushButton(QStringLiteral("加载全部"), bottomWidget);
+    m_loadAllBtn->setObjectName("loadAllBtn");
+    m_loadAllBtn->setFont(FontManager::getTextFont(this));
+    m_loadAllBtn->setCursor(Qt::PointingHandCursor);
+    bottomBar->addWidget(m_loadAllBtn);
+
+    m_keyCountLabel = new QLabel(QStringLiteral("未连接"), bottomWidget);
+    m_keyCountLabel->setStyleSheet("color: rgb(107,114,128); font-size: 11px; border: none;");
     bottomBar->addWidget(m_keyCountLabel);
     bottomBar->addStretch();
-    m_loadMoreBtn = new QPushButton(QStringLiteral("加载更多"), listWidget);
-    m_loadMoreBtn->setObjectName("refreshButton");
-    m_loadMoreBtn->setFont(FontManager::getTextFont(this));
-    m_loadMoreBtn->setVisible(false);
-    bottomBar->addWidget(m_loadMoreBtn);
-    listLayout->addLayout(bottomBar);
+
+    listLayout->addWidget(bottomWidget);
 
     contentLayout->addWidget(listWidget, 1);
 
@@ -192,6 +217,7 @@ void KeyManagerPage::setupUI()
     connect(m_searchEdit, &QLineEdit::returnPressed, this, &KeyManagerPage::onSearch);
     connect(m_addBtn, &QPushButton::clicked, this, &KeyManagerPage::onAdd);
     connect(m_loadMoreBtn, &QPushButton::clicked, this, &KeyManagerPage::onLoadMore);
+    connect(m_loadAllBtn, &QPushButton::clicked, this, &KeyManagerPage::onLoadAll);
     connect(m_keyTree, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem *item, int) {
         if (item->childCount() > 0) return;
         QString fullKey = item->data(0, Qt::UserRole).toString();
@@ -199,6 +225,8 @@ void KeyManagerPage::setupUI()
     });
     connect(m_dbCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &KeyManagerPage::onDbChanged);
+    connect(m_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int) { if (m_client) loadKeys(true); });
 
     setFocusPolicy(Qt::StrongFocus);
 }
@@ -258,10 +286,17 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     m_ttlSpin = new QSpinBox(parent);
     m_ttlSpin->setRange(-1, 999999999);
     m_ttlSpin->setValue(-1);
-    m_ttlSpin->setSpecialValueText(QStringLiteral("永不过期"));
+    m_ttlSpin->setToolTip(QStringLiteral("-1 = 永不过期, 0 = 立即过期(删除), >0 = 过期秒数"));
     m_ttlSpin->setStyleSheet(
         "QSpinBox { background: rgb(55,65,81); color: white; border: 1px solid rgb(75,85,99); "
-        "border-radius: 4px; padding: 2px 4px; min-width: 100px; }");
+        "border-radius: 4px; padding: 2px 4px; min-width: 110px; }"
+        "QSpinBox::up-button { subcontrol-origin: border; subcontrol-position: top right; "
+        "width: 16px; border-left: 1px solid rgb(75,85,99); background: rgb(55,65,81); }"
+        "QSpinBox::down-button { subcontrol-origin: border; subcontrol-position: bottom right; "
+        "width: 16px; border-left: 1px solid rgb(75,85,99); background: rgb(55,65,81); }"
+        "QSpinBox::up-arrow { image: url(:/images/icons/icon-arrow-up.svg); width: 8px; height: 6px; }"
+        "QSpinBox::down-arrow { image: url(:/images/icons/icon-arrow-down.svg); width: 8px; height: 6px; }"
+        "QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: rgb(75,85,99); }");
     row2->addWidget(m_ttlSpin);
     m_ttlSetBtn = new QPushButton(QStringLiteral("设置"), parent);
     m_ttlSetBtn->setStyleSheet(
@@ -331,8 +366,11 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     m_valueStack->setCurrentIndex(5);
     layout->addWidget(m_valueStack, 1);
 
-    // Save button
+    // Save button + status
     auto *btnBar = new QHBoxLayout;
+    m_saveStatusLabel = new QLabel(parent);
+    m_saveStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 12px; font-weight: bold;");
+    btnBar->addWidget(m_saveStatusLabel);
     btnBar->addStretch();
     m_saveBtn = new QPushButton(QStringLiteral("保存修改"), parent);
     m_saveBtn->setObjectName("addButton");
@@ -346,7 +384,17 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     connect(m_ttlSetBtn, &QPushButton::clicked, this, [this]() {
         if (!m_client || m_currentKey.isEmpty()) return;
         int ttl = m_ttlSpin->value();
-        if (ttl <= 0) {
+        if (ttl == 0) {
+            if (!CommonHelper::confirm(this, QStringLiteral("警告"),
+                    QStringLiteral("TTL 设置为 0 将使键立即过期（等同于删除），是否继续？"),
+                    QMessageBox::Warning)) return;
+            m_client->expire(m_currentKey, 0, [this](const QVariant &, const QString &err) {
+                if (err.isEmpty()) {
+                    m_detailTtlLabel->setText(QStringLiteral("TTL: 已过期(删除)"));
+                    loadKeys(true);
+                }
+            });
+        } else if (ttl < 0) {
             m_client->execute({QStringLiteral("PERSIST"), m_currentKey}, [this](const QVariant &, const QString &err) {
                 if (err.isEmpty()) m_detailTtlLabel->setText(QStringLiteral("TTL: 永不过期"));
             });
@@ -406,7 +454,69 @@ void KeyManagerPage::onSearch()
 
 void KeyManagerPage::onLoadMore()
 {
+    if (!m_client || m_scanCursor == 0) return;
+    m_loadMoreBtn->setEnabled(false);
+    m_loadMoreBtn->setText(QStringLiteral("加载中..."));
     loadKeys(false);
+}
+
+void KeyManagerPage::onLoadAll()
+{
+    if (!m_client) return;
+
+    m_scanCursor = 0;
+    m_allKeys.clear();
+
+    m_loadMoreBtn->setEnabled(false);
+    m_loadAllBtn->setEnabled(false);
+    m_loadAllBtn->setText(QStringLiteral("加载中..."));
+    m_keyCountLabel->setText(QStringLiteral("加载中..."));
+
+    loadAllBatch();
+}
+
+void KeyManagerPage::loadAllBatch()
+{
+    if (!m_client) return;
+
+    QString pattern = m_searchEdit->text().trimmed();
+    if (pattern.isEmpty()) pattern = QStringLiteral("*");
+
+    QString type;
+    if (m_typeCombo->currentIndex() > 0)
+        type = m_typeCombo->currentText();
+
+    m_client->scan(m_scanCursor, pattern, 500, type,
+                   [this](const QVariant &result, const QString &err) {
+        if (!err.isEmpty()) {
+            m_loadMoreBtn->setEnabled(false);
+            m_loadAllBtn->setEnabled(true);
+            m_loadAllBtn->setText(QStringLiteral("加载全部"));
+            return;
+        }
+
+        QVariantList arr = result.toList();
+        if (arr.size() < 2) return;
+
+        m_scanCursor = arr[0].toLongLong();
+        QVariantList keys = arr[1].toList();
+
+        for (const QVariant &k : keys)
+            m_allKeys.append(k.toString());
+
+        m_keyCountLabel->setText(QString("加载中... %1 个键").arg(m_allKeys.size()));
+
+        if (m_scanCursor == 0) {
+            buildKeyTree(m_allKeys);
+            m_loadMoreBtn->setEnabled(false);
+            m_loadMoreBtn->setText(QStringLiteral("加载更多"));
+            m_loadAllBtn->setEnabled(true);
+            m_loadAllBtn->setText(QStringLiteral("加载全部"));
+            m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
+        } else {
+            QMetaObject::invokeMethod(this, &KeyManagerPage::loadAllBatch, Qt::QueuedConnection);
+        }
+    });
 }
 
 void KeyManagerPage::onDbChanged(int index)
@@ -433,6 +543,12 @@ void KeyManagerPage::onAdd()
     QString type = dlg.keyType();
     int ttl = dlg.ttlSeconds();
 
+    if (ttl == 0) {
+        if (!CommonHelper::confirm(this, QStringLiteral("警告"),
+                QStringLiteral("TTL 设置为 0 将使键创建后立即过期（等同于删除），是否继续？"),
+                QMessageBox::Warning)) return;
+    }
+
     RedisCallback afterSet = [this, key, ttl](const QVariant &, const QString &err) {
         if (!err.isEmpty()) {
             QMessageBox::warning(this, QStringLiteral("错误"), err);
@@ -440,6 +556,8 @@ void KeyManagerPage::onAdd()
         }
         if (ttl > 0) {
             m_client->expire(key, ttl, [](const QVariant &, const QString &) {});
+        } else if (ttl == 0) {
+            m_client->expire(key, 0, [](const QVariant &, const QString &) {});
         }
         loadKeys(true);
     };
@@ -464,8 +582,8 @@ void KeyManagerPage::onAdd()
 void KeyManagerPage::onDeleteKey()
 {
     if (!m_client || m_currentKey.isEmpty()) return;
-    if (QMessageBox::question(this, QStringLiteral("确认"),
-            QString("确定删除键 \"%1\" 吗？").arg(m_currentKey)) != QMessageBox::Yes)
+    if (!CommonHelper::confirm(this, QStringLiteral("确认"),
+            QString("确定删除键 \"%1\" 吗？").arg(m_currentKey)))
         return;
 
     m_client->del({m_currentKey}, [this](const QVariant &, const QString &err) {
@@ -484,12 +602,63 @@ void KeyManagerPage::onSaveValue()
 
     int page = m_valueStack->currentIndex();
     if (page == 0) {
-        m_client->set(m_currentKey, m_stringEdit->toPlainText(), -1,
+        QString text = m_stringEdit->toPlainText();
+        QString valueToSave = text;
+
+        if (m_isJsonValue) {
+            QJsonParseError parseErr;
+            QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &parseErr);
+            if (parseErr.error == QJsonParseError::NoError && !doc.isNull()) {
+                valueToSave = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+            } else {
+                QMessageBox box(QMessageBox::Warning, QStringLiteral("JSON 格式错误"),
+                    QStringLiteral("当前内容不是合法的 JSON 格式，是否仍然保存原始文本？"),
+                    QMessageBox::NoButton, this);
+                auto *saveBtn = box.addButton(QStringLiteral("仍然保存"), QMessageBox::AcceptRole);
+                box.addButton(QStringLiteral("取消"), QMessageBox::RejectRole);
+                box.exec();
+                if (box.clickedButton() != saveBtn) return;
+                valueToSave = text;
+            }
+        }
+
+        m_client->set(m_currentKey, valueToSave, -1,
                       [this](const QVariant &, const QString &err) {
-            if (err.isEmpty())
-                m_detailTtlLabel->setText(m_detailTtlLabel->text() + QStringLiteral(" (已保存)"));
+            if (err.isEmpty()) {
+                m_saveCount++;
+                flashSaveStatus();
+            }
         });
     }
+}
+
+void KeyManagerPage::flashSaveStatus()
+{
+    QString text;
+    if (m_saveCount <= 1)
+        text = QStringLiteral("\u2713 已保存");
+    else
+        text = QString("\u2713 已保存 (%1)").arg(m_saveCount);
+
+    m_saveStatusLabel->setText(text);
+    m_saveStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 12px; font-weight: bold;");
+
+    auto *anim = new QVariantAnimation(this);
+    anim->setStartValue(1.0);
+    anim->setKeyValueAt(0.15, 0.2);
+    anim->setKeyValueAt(0.3, 1.0);
+    anim->setKeyValueAt(0.5, 0.3);
+    anim->setEndValue(1.0);
+    anim->setDuration(800);
+
+    connect(anim, &QVariantAnimation::valueChanged, this, [this](const QVariant &val) {
+        double opacity = val.toDouble();
+        int alpha = static_cast<int>(opacity * 255);
+        m_saveStatusLabel->setStyleSheet(
+            QString("color: rgba(34,197,94,%1); font-size: 12px; font-weight: bold;").arg(alpha));
+    });
+    connect(anim, &QVariantAnimation::finished, anim, &QObject::deleteLater);
+    anim->start();
 }
 
 void KeyManagerPage::onKeySelected()
@@ -533,8 +702,16 @@ void KeyManagerPage::loadKeys(bool reset)
 
         buildKeyTree(m_allKeys);
 
-        m_loadMoreBtn->setVisible(m_scanCursor != 0);
-        m_keyCountLabel->setText(QString("已加载 %1 个键").arg(m_allKeys.size()));
+        bool hasMore = (m_scanCursor != 0);
+        m_loadMoreBtn->setEnabled(hasMore);
+        m_loadMoreBtn->setText(QStringLiteral("加载更多"));
+        m_loadAllBtn->setEnabled(true);
+        m_loadAllBtn->setText(QStringLiteral("加载全部"));
+        if (hasMore) {
+            m_keyCountLabel->setText(QString("已加载 %1 个键...").arg(m_allKeys.size()));
+        } else {
+            m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
+        }
     });
 }
 
@@ -619,6 +796,8 @@ void KeyManagerPage::showKeyDetail(const QString &key)
     if (!m_client) return;
     m_currentKey = key;
     m_detailKeyLabel->setText(key);
+    m_saveCount = 0;
+    m_saveStatusLabel->clear();
 
     showDetailDrawer();
 
@@ -650,7 +829,16 @@ void KeyManagerPage::showStringDetail(const QString &key)
 {
     m_client->get(key, [this](const QVariant &res, const QString &err) {
         if (!err.isEmpty()) return;
-        m_stringEdit->setPlainText(res.toString());
+        QString raw = res.toString();
+        QJsonParseError parseErr;
+        QJsonDocument doc = QJsonDocument::fromJson(raw.toUtf8(), &parseErr);
+        if (parseErr.error == QJsonParseError::NoError && !doc.isNull()) {
+            m_isJsonValue = true;
+            m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
+        } else {
+            m_isJsonValue = false;
+            m_stringEdit->setPlainText(raw);
+        }
         m_valueStack->setCurrentIndex(0);
     });
 }

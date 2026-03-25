@@ -37,12 +37,14 @@ private slots:
     void onDeleteKey();
     void onSaveValue();
     void onLoadMore();
+    void onLoadAll();
     void onDbChanged(int index);
 
 private:
     void setupUI();
     void setupDetailPanel(QWidget *parent);
     void loadKeys(bool reset = true);
+    void loadAllBatch();
     void showKeyDetail(const QString &key);
     void showStringDetail(const QString &key);
     void showHashDetail(const QString &key);
@@ -65,6 +67,7 @@ private:
     // Key list (tree)
     QTreeWidget *m_keyTree;
     QPushButton *m_loadMoreBtn;
+    QPushButton *m_loadAllBtn;
     QLabel *m_keyCountLabel;
     void buildKeyTree(const QStringList &keys);
     QTreeWidgetItem *findOrCreateGroup(QTreeWidgetItem *parent, const QString &segment);
@@ -93,6 +96,12 @@ private:
     QLabel *m_emptyLabel;          // index 5: empty
 
     QPushButton *m_saveBtn;
+    QLabel *m_saveStatusLabel;
+    int m_saveCount = 0;
+    void flashSaveStatus();
+
+    // JSON detection
+    bool m_isJsonValue = false;
 
     // SCAN state
     qlonglong m_scanCursor = 0;

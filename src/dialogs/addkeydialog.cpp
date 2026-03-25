@@ -79,13 +79,27 @@ void AddKeyDialog::setupUI()
     auto *ttlRow = new QHBoxLayout;
     auto *ttlLabel = new QLabel(QStringLiteral("过期时间 (TTL)"), this);
     ttlRow->addWidget(ttlLabel);
+    auto *ttlHint = new QLabel(QStringLiteral("-1 = 永不过期, 0 = 立即过期"), this);
+    ttlHint->setStyleSheet("color: rgb(107,114,128); font-size: 11px;");
+    ttlRow->addWidget(ttlHint);
+    ttlRow->addStretch();
     m_ttlSpin = new QSpinBox(this);
     m_ttlSpin->setRange(-1, 999999999);
     m_ttlSpin->setValue(-1);
-    m_ttlSpin->setSpecialValueText(QStringLiteral("永不过期"));
     m_ttlSpin->setSuffix(QStringLiteral(" 秒"));
-    m_ttlSpin->setMinimumWidth(160);
-    ttlRow->addStretch();
+    m_ttlSpin->setMinimumWidth(180);
+    m_ttlSpin->setToolTip(QStringLiteral("-1 = 永不过期, 0 = 立即过期(删除), >0 = 过期秒数"));
+    m_ttlSpin->setStyleSheet(
+        "QSpinBox { background: rgb(31,41,55); color: white; border: 1px solid rgb(55,65,81); "
+        "border-radius: 6px; padding: 4px 8px; }"
+        "QSpinBox:focus { border-color: rgba(147,51,234,1); }"
+        "QSpinBox::up-button { subcontrol-origin: border; subcontrol-position: top right; "
+        "width: 18px; border-left: 1px solid rgb(55,65,81); background: rgb(31,41,55); border-top-right-radius: 6px; }"
+        "QSpinBox::down-button { subcontrol-origin: border; subcontrol-position: bottom right; "
+        "width: 18px; border-left: 1px solid rgb(55,65,81); background: rgb(31,41,55); border-bottom-right-radius: 6px; }"
+        "QSpinBox::up-arrow { image: url(:/images/icons/icon-arrow-up.svg); width: 8px; height: 6px; }"
+        "QSpinBox::down-arrow { image: url(:/images/icons/icon-arrow-down.svg); width: 8px; height: 6px; }"
+        "QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: rgb(55,65,81); }");
     ttlRow->addWidget(m_ttlSpin);
     mainLayout->addLayout(ttlRow);
 

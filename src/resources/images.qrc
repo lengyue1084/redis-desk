@@ -16,5 +16,7 @@
         <file>images/icons/icon-refresh.png</file>
         <file>images/icons/icon-chevron-left.svg</file>
         <file>images/icons/icon-chevron-right.svg</file>
+        <file>images/icons/icon-arrow-up.svg</file>
+        <file>images/icons/icon-arrow-down.svg</file>
     </qresource>
 </RCC>

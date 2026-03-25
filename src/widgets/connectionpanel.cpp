@@ -1,6 +1,7 @@
 #include "widgets/connectionpanel.h"
 #include "dialogs/connectiondialog.h"
 #include "utils/dpitools.h"
+#include "utils/commonhelper.h"
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QMenu>
@@ -69,8 +70,8 @@ void ConnectionPanel::setupUI()
             });
             menu.addSeparator();
             menu.addAction(QStringLiteral("删除"), this, [this, connId]() {
-                if (QMessageBox::question(this, QStringLiteral("确认"),
-                        QStringLiteral("确定要删除此连接吗？")) == QMessageBox::Yes) {
+                if (CommonHelper::confirm(this, QStringLiteral("确认"),
+                        QStringLiteral("确定要删除此连接吗？"))) {
                     if (connId == m_currentConnectionId)
                         disconnectCurrent();
                     ConnectionConfigManager::instance().removeConnection(connId);
