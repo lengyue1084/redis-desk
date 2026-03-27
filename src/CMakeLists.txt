@@ -53,13 +53,13 @@ set(QRC_FILES
 
 # 创建可执行文件
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(my-redis
+    qt_add_executable(RedisDesk
         MANUAL_FINALIZATION
         ${SOURCES}
         ${HEADERS}
     )
 else()
-    add_executable(my-redis
+    add_executable(RedisDesk
         ${SOURCES}
         ${HEADERS}
     )
@@ -74,13 +74,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         )
     endforeach()
 
-    qt_add_resources(my-redis "app_resources"
+    qt_add_resources(RedisDesk "app_resources"
         PREFIX "/"
         FILES ${QRC_FILES}
     )
 else()
     qt5_add_resources(RCC_SOURCES ${QRC_FILES})
-    target_sources(my-redis PRIVATE ${RCC_SOURCES})
+    target_sources(RedisDesk PRIVATE ${RCC_SOURCES})
 endif()
 
 # IDE虚拟文件夹分组
@@ -116,7 +116,7 @@ endforeach()
 
 # 头文件组织
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    target_sources(my-redis PRIVATE
+    target_sources(RedisDesk PRIVATE
         FILE_SET HEADERS
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES ${HEADERS}
@@ -124,44 +124,44 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 endif()
 
 # 设置目标属性
-set_target_properties(my-redis PROPERTIES
+set_target_properties(RedisDesk PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-    OUTPUT_NAME "my-redis"
+    OUTPUT_NAME "RedisDesk"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
 )
 
 # 包含目录
-target_include_directories(my-redis PRIVATE
+target_include_directories(RedisDesk PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/constants
 )
 
 # 链接库
-target_link_libraries(my-redis PRIVATE
+target_link_libraries(RedisDesk PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
 )
 
 # 添加编译定义
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(my-redis PRIVATE DEBUG=1)
+    target_compile_definitions(RedisDesk PRIVATE DEBUG=1)
 endif()
 
 # 设置编译器编码选项
 if(MSVC)
-    target_compile_options(my-redis PRIVATE /utf-8)
+    target_compile_options(RedisDesk PRIVATE /utf-8)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(my-redis PRIVATE -finput-charset=UTF-8 -fexec-charset=UTF-8)
+    target_compile_options(RedisDesk PRIVATE -finput-charset=UTF-8 -fexec-charset=UTF-8)
 endif()
 
 # Qt6最终化
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_finalize_executable(my-redis)
+    qt_finalize_executable(RedisDesk)
 endif()
 
 # 安装配置
-install(TARGETS my-redis
+install(TARGETS RedisDesk
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

@@ -87,7 +87,7 @@ inline const QString& splitterHandle() { static const QString style = "QSplitter
 }
 
 namespace Ttile {
-inline const QString& projectTitle(){ static const QString title = "RedisAdmin";return title;}
+inline const QString& projectTitle(){ static const QString title = "RedisDesk";return title;}
 
 }
 

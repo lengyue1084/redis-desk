@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_expandedWidth(0)
 {
     setObjectName("techBackground");
-    setWindowTitle(QStringLiteral("Redis 管理客户端"));
+    setWindowTitle(QStringLiteral("RedisDesk"));
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
 
     QScreen *screen = QApplication::primaryScreen();

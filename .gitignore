@@ -60,6 +60,7 @@ CMakeLists.txt.user*
 *.opensdf
 *.vcxproj
 *vcxproj.*
+.vs/
 
 # MinGW generated files
 *.Debug
@@ -80,3 +81,5 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+/out/
+/Microsoft/
