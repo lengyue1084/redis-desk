@@ -83,3 +83,7 @@ CMakeLists.txt.user*
 /build*/
 /out/
 /Microsoft/
+
+# Local workspace/user files
+/.trae/
+/CMakeUserPresets.json
