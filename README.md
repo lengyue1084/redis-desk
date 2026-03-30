@@ -4,6 +4,11 @@
 
 RedisDesk 是一个基于 Qt Widgets 的桌面端 Redis 管理工具，面向日常开发、调试和运维场景，提供连接管理、键值浏览、数据编辑、数据概览、性能监控和配置管理等能力。
 
+## Release 下载
+
+- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.1.0
+- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.1.0
+
 ## 功能特性
 
 - 连接管理：支持新建、编辑、删除、测试、导入和导出 Redis 连接配置
