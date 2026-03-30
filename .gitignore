@@ -84,6 +84,7 @@ CMakeLists.txt.user*
 /build*/
 /out/
 /Microsoft/
+/release/
 
 # Local workspace/user files
 /.trae/
