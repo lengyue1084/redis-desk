@@ -45,6 +45,11 @@ set(SOURCES
     utils/commonhelper.cpp
 )
 
+set(APP_PLATFORM_SOURCES)
+if(WIN32)
+    list(APPEND APP_PLATFORM_SOURCES app.rc)
+endif()
+
 # 资源文件
 set(QRC_FILES
     resources/styles.qrc
@@ -57,11 +62,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${SOURCES}
         ${HEADERS}
+        ${APP_PLATFORM_SOURCES}
     )
 else()
     add_executable(RedisDesk
         ${SOURCES}
         ${HEADERS}
+        ${APP_PLATFORM_SOURCES}
     )
 endif()
 
@@ -112,6 +119,10 @@ foreach(qrc_file ${QRC_FILES})
         string(REPLACE "/" "\\" group_name "Resources\\${file_dir}")
         source_group("${group_name}" FILES ${qrc_file})
     endif()
+endforeach()
+
+foreach(platform_file ${APP_PLATFORM_SOURCES})
+    source_group("Resources" FILES ${platform_file})
 endforeach()
 
 # 头文件组织
