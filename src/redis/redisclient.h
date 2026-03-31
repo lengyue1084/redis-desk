@@ -24,6 +24,7 @@ public:
     void disconnectFromServer();
     bool isConnected() const;
     ConnectionState state() const { return m_state; }
+    int database() const { return m_database; }
 
     void execute(const QStringList &command, RedisCallback callback = nullptr);
 

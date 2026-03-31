@@ -21,9 +21,11 @@ MonitorMenuPage::MonitorMenuPage(QWidget *parent)
 void MonitorMenuPage::setClient(RedisClient *client)
 {
     m_client = client;
-    if (m_client) {
+    if (m_client && isVisible()) {
         refresh();
         m_refreshTimer->start();
+    } else {
+        m_refreshTimer->stop();
     }
 }
 
@@ -49,6 +51,21 @@ void MonitorMenuPage::clearAll()
     m_evictedKeys->setText("--");
     m_historyTable->setRowCount(0);
     m_history.clear();
+}
+
+void MonitorMenuPage::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    if (m_client) {
+        refresh();
+        m_refreshTimer->start();
+    }
+}
+
+void MonitorMenuPage::hideEvent(QHideEvent *event)
+{
+    m_refreshTimer->stop();
+    QWidget::hideEvent(event);
 }
 
 QWidget *MonitorMenuPage::createMetricCard(const QString &title, const QString &objName, QWidget *parent)

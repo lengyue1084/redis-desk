@@ -13,6 +13,7 @@
 #include <QStackedWidget>
 #include <QSpinBox>
 #include <QPropertyAnimation>
+#include <QtGlobal>
 #include "redis/redisclient.h"
 
 class KeyManagerPage : public QWidget
@@ -45,6 +46,11 @@ private:
     void setupDetailPanel(QWidget *parent);
     void loadKeys(bool reset = true);
     void loadAllBatch();
+    QString currentSearchPattern() const;
+    QString currentTypeFilter() const;
+    void filterKeysByType(const QStringList &keys, const QString &typeFilter,
+                          const RedisClient *requestClient, quint64 requestId,
+                          const std::function<void(const QStringList &)> &onDone);
     void showKeyDetail(const QString &key);
     void showStringDetail(const QString &key);
     void showHashDetail(const QString &key);
@@ -107,6 +113,8 @@ private:
     qlonglong m_scanCursor = 0;
     QString m_currentKey;
     QStringList m_allKeys;
+    quint64 m_keyListRequestId = 0;
+    quint64 m_keyDetailRequestId = 0;
 };
 
 #endif // KEYMANAGERPAGE_H

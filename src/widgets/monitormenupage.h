@@ -8,6 +8,8 @@
 #include <QTableWidget>
 #include <QMap>
 #include <QList>
+#include <QShowEvent>
+#include <QHideEvent>
 #include "redis/redisclient.h"
 
 class MonitorMenuPage : public QWidget
@@ -19,6 +21,10 @@ public:
 
     void setClient(RedisClient *client);
     void clearAll();
+
+protected:
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 private:
     void setupUI();

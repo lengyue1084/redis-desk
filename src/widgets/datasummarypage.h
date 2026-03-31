@@ -6,6 +6,8 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QMap>
+#include <QShowEvent>
+#include <QHideEvent>
 #include "redis/redisclient.h"
 
 class DataSummaryPage : public QWidget
@@ -17,6 +19,10 @@ public:
 
     void setClient(RedisClient *client);
     void clearAll();
+
+protected:
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 private:
     void setupUI();

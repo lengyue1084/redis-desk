@@ -510,7 +510,13 @@ void RedisClient::configSet(const QString &key, const QString &value, RedisCallb
 
 void RedisClient::selectDb(int db, RedisCallback cb)
 {
-    execute({QStringLiteral("SELECT"), QString::number(db)}, cb);
+    execute({QStringLiteral("SELECT"), QString::number(db)},
+            [this, db, cb](const QVariant &result, const QString &err) {
+        if (err.isEmpty())
+            m_database = db;
+        if (cb)
+            cb(result, err);
+    });
 }
 
 void RedisClient::flushdb(RedisCallback cb)

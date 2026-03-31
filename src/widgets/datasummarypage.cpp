@@ -22,9 +22,11 @@ DataSummaryPage::~DataSummaryPage() {}
 void DataSummaryPage::setClient(RedisClient *client)
 {
     m_client = client;
-    if (m_client) {
+    if (m_client && isVisible()) {
         refresh();
         m_refreshTimer->start();
+    } else {
+        m_refreshTimer->stop();
     }
 }
 
@@ -49,6 +51,21 @@ void DataSummaryPage::clearAll()
     m_listCount->setText("0");
     m_setCount->setText("0");
     m_zsetCount->setText("0");
+}
+
+void DataSummaryPage::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    if (m_client) {
+        refresh();
+        m_refreshTimer->start();
+    }
+}
+
+void DataSummaryPage::hideEvent(QHideEvent *event)
+{
+    m_refreshTimer->stop();
+    QWidget::hideEvent(event);
 }
 
 QWidget *DataSummaryPage::createStatCard(const QString &title, const QString &objectName,

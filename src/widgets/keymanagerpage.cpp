@@ -12,6 +12,9 @@
 #include <QVariantAnimation>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QSignalBlocker>
+#include <QTimer>
+#include <memory>
 #include <functional>
 
 KeyManagerPage::KeyManagerPage(QWidget *parent)
@@ -25,12 +28,19 @@ KeyManagerPage::~KeyManagerPage() {}
 void KeyManagerPage::setClient(RedisClient *client)
 {
     m_client = client;
-    if (m_client)
+    ++m_keyListRequestId;
+    ++m_keyDetailRequestId;
+    if (m_client) {
+        const QSignalBlocker blocker(m_dbCombo);
+        m_dbCombo->setCurrentIndex(m_client->database());
         loadKeys(true);
+    }
 }
 
 void KeyManagerPage::clearAll()
 {
+    ++m_keyListRequestId;
+    ++m_keyDetailRequestId;
     m_client = nullptr;
     m_keyTree->clear();
     m_keyCountLabel->setText(QStringLiteral("未连接"));
@@ -44,6 +54,7 @@ void KeyManagerPage::clearAll()
     m_detailTtlLabel->clear();
     m_currentKey.clear();
     m_allKeys.clear();
+    m_scanCursor = 0;
     hideDetailDrawer();
 }
 
@@ -425,6 +436,7 @@ void KeyManagerPage::hideDetailDrawer()
 {
     if (!m_drawerOpen) return;
     m_drawerOpen = false;
+    ++m_keyDetailRequestId;
 
     m_drawerAnim->stop();
     m_drawerAnim->setStartValue(m_detailContainer->maximumWidth());
@@ -461,6 +473,7 @@ void KeyManagerPage::onLoadAll()
 {
     if (!m_client) return;
 
+    ++m_keyListRequestId;
     m_scanCursor = 0;
     m_allKeys.clear();
 
@@ -476,19 +489,21 @@ void KeyManagerPage::loadAllBatch()
 {
     if (!m_client) return;
 
-    QString pattern = m_searchEdit->text().trimmed();
-    if (pattern.isEmpty()) pattern = QStringLiteral("*");
+    const RedisClient *requestClient = m_client;
+    const quint64 requestId = m_keyListRequestId;
+    const QString pattern = currentSearchPattern();
+    const QString type = currentTypeFilter();
+    const int scanCount = type.isEmpty() ? 500 : 1000;
 
-    QString type;
-    if (m_typeCombo->currentIndex() > 0)
-        type = m_typeCombo->currentText();
-
-    m_client->scan(m_scanCursor, pattern, 500, type,
-                   [this](const QVariant &result, const QString &err) {
+    m_client->scan(m_scanCursor, pattern, scanCount, QString(),
+                   [this, requestClient, requestId, type](const QVariant &result, const QString &err) {
+        if (m_client != requestClient || m_keyListRequestId != requestId)
+            return;
         if (!err.isEmpty()) {
             m_loadMoreBtn->setEnabled(false);
             m_loadAllBtn->setEnabled(true);
             m_loadAllBtn->setText(QStringLiteral("加载全部"));
+            m_keyCountLabel->setText(QStringLiteral("加载失败"));
             return;
         }
 
@@ -496,10 +511,36 @@ void KeyManagerPage::loadAllBatch()
         if (arr.size() < 2) return;
 
         m_scanCursor = arr[0].toLongLong();
-        QVariantList keys = arr[1].toList();
+        const QVariantList keys = arr[1].toList();
+        QStringList rawKeys;
+        rawKeys.reserve(keys.size());
 
         for (const QVariant &k : keys)
-            m_allKeys.append(k.toString());
+            rawKeys.append(k.toString());
+
+        filterKeysByType(rawKeys, type, requestClient, requestId,
+                         [this, requestId](const QStringList &matchedKeys) {
+            if (m_keyListRequestId != requestId)
+                return;
+
+            m_allKeys.append(matchedKeys);
+            m_keyCountLabel->setText(QString("鍔犺浇涓?.. %1 涓敭").arg(m_allKeys.size()));
+
+            if (m_scanCursor == 0) {
+                buildKeyTree(m_allKeys);
+                m_loadMoreBtn->setEnabled(false);
+                m_loadMoreBtn->setText(QStringLiteral("鍔犺浇鏇村"));
+                m_loadAllBtn->setEnabled(true);
+                m_loadAllBtn->setText(QStringLiteral("鍔犺浇鍏ㄩ儴"));
+                m_keyCountLabel->setText(QString("鍏?%1 涓敭").arg(m_allKeys.size()));
+            } else {
+                QTimer::singleShot(0, this, [this, requestId]() {
+                    if (m_keyListRequestId == requestId)
+                        loadAllBatch();
+                });
+            }
+        });
+        return;
 
         m_keyCountLabel->setText(QString("加载中... %1 个键").arg(m_allKeys.size()));
 
@@ -511,7 +552,10 @@ void KeyManagerPage::loadAllBatch()
             m_loadAllBtn->setText(QStringLiteral("加载全部"));
             m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
         } else {
-            QMetaObject::invokeMethod(this, &KeyManagerPage::loadAllBatch, Qt::QueuedConnection);
+            QTimer::singleShot(0, this, [this, requestId]() {
+                if (m_keyListRequestId == requestId)
+                    loadAllBatch();
+            });
         }
     });
 }
@@ -519,6 +563,9 @@ void KeyManagerPage::loadAllBatch()
 void KeyManagerPage::onDbChanged(int index)
 {
     if (!m_client) return;
+    ++m_keyListRequestId;
+    ++m_keyDetailRequestId;
+    hideDetailDrawer();
     m_client->selectDb(index, [this](const QVariant &, const QString &err) {
         if (!err.isEmpty()) {
             QMessageBox::warning(this, QStringLiteral("错误"),
@@ -583,10 +630,18 @@ void KeyManagerPage::onDeleteKey()
             QString("确定删除键 \"%1\" 吗？").arg(m_currentKey)))
         return;
 
-    m_client->del({m_currentKey}, [this](const QVariant &, const QString &err) {
+    const QString keyToDelete = m_currentKey;
+    ++m_keyListRequestId;
+    ++m_keyDetailRequestId;
+    m_client->del({keyToDelete}, [this, keyToDelete](const QVariant &result, const QString &err) {
         if (!err.isEmpty()) {
             QMessageBox::warning(this, QStringLiteral("错误"), err);
             return;
+        }
+        if (result.toLongLong() <= 0) {
+            QMessageBox::information(this, QStringLiteral("提示"),
+                                     QStringLiteral("键 \"%1\" 未删除，可能已不存在或当前数据库不匹配。")
+                                         .arg(keyToDelete));
         }
         hideDetailDrawer();
         loadKeys(true);
@@ -668,34 +723,126 @@ void KeyManagerPage::onKeySelected()
 
 // ---------- Data loading ----------
 
+QString KeyManagerPage::currentSearchPattern() const
+{
+    QString pattern = m_searchEdit->text().trimmed();
+    if (pattern.isEmpty())
+        return QStringLiteral("*");
+
+    if (pattern.contains('*') || pattern.contains('?') || pattern.contains('['))
+        return pattern;
+
+    return QStringLiteral("*%1*").arg(pattern);
+}
+
+QString KeyManagerPage::currentTypeFilter() const
+{
+    return m_typeCombo->currentIndex() > 0 ? m_typeCombo->currentText() : QString();
+}
+
+void KeyManagerPage::filterKeysByType(const QStringList &keys, const QString &typeFilter,
+                                      const RedisClient *requestClient, quint64 requestId,
+                                      const std::function<void(const QStringList &)> &onDone)
+{
+    if (!m_client || m_client != requestClient || m_keyListRequestId != requestId)
+        return;
+
+    if (typeFilter.isEmpty() || keys.isEmpty()) {
+        if (onDone)
+            onDone(keys);
+        return;
+    }
+
+    auto filteredKeys = std::make_shared<QStringList>();
+    auto nextIndex = std::make_shared<int>(0);
+    auto processNext = std::make_shared<std::function<void()>>();
+
+    *processNext = [this, keys, typeFilter, requestClient, requestId, filteredKeys, nextIndex, processNext, onDone]() {
+        if (!m_client || m_client != requestClient || m_keyListRequestId != requestId)
+            return;
+
+        if (*nextIndex >= keys.size()) {
+            if (onDone)
+                onDone(*filteredKeys);
+            return;
+        }
+
+        const QString key = keys.at((*nextIndex)++);
+        m_client->type(key, [this, key, typeFilter, requestClient, requestId, filteredKeys, processNext, onDone](const QVariant &res, const QString &err) {
+            if (!m_client || m_client != requestClient || m_keyListRequestId != requestId)
+                return;
+
+            if (err.isEmpty() && res.toString() == typeFilter)
+                filteredKeys->append(key);
+
+            Q_UNUSED(key)
+            (*processNext)();
+        });
+    };
+
+    (*processNext)();
+}
+
 void KeyManagerPage::loadKeys(bool reset)
 {
     if (!m_client) return;
 
     if (reset) {
+        ++m_keyListRequestId;
         m_scanCursor = 0;
         m_allKeys.clear();
     }
 
-    QString pattern = m_searchEdit->text().trimmed();
-    if (pattern.isEmpty()) pattern = QStringLiteral("*");
+    const RedisClient *requestClient = m_client;
+    const quint64 requestId = m_keyListRequestId;
+    const QString pattern = currentSearchPattern();
+    const QString type = currentTypeFilter();
+    const int scanCount = type.isEmpty() ? 200 : 1000;
 
-    QString type;
-    if (m_typeCombo->currentIndex() > 0)
-        type = m_typeCombo->currentText();
-
-    m_client->scan(m_scanCursor, pattern, 200, type,
-                   [this](const QVariant &result, const QString &err) {
-        if (!err.isEmpty()) return;
+    m_client->scan(m_scanCursor, pattern, scanCount, QString(),
+                   [this, requestClient, requestId, type](const QVariant &result, const QString &err) {
+        if (m_client != requestClient || m_keyListRequestId != requestId)
+            return;
+        if (!err.isEmpty()) {
+            m_keyTree->clear();
+            m_allKeys.clear();
+            m_loadMoreBtn->setEnabled(false);
+            m_loadAllBtn->setEnabled(false);
+            m_keyCountLabel->setText(QStringLiteral("加载失败"));
+            return;
+        }
 
         QVariantList arr = result.toList();
         if (arr.size() < 2) return;
 
         m_scanCursor = arr[0].toLongLong();
-        QVariantList keys = arr[1].toList();
+        const QVariantList keys = arr[1].toList();
+        QStringList rawKeys;
+        rawKeys.reserve(keys.size());
 
         for (const QVariant &k : keys)
-            m_allKeys.append(k.toString());
+            rawKeys.append(k.toString());
+
+        filterKeysByType(rawKeys, type, requestClient, requestId,
+                         [this, requestId](const QStringList &matchedKeys) {
+            if (m_keyListRequestId != requestId)
+                return;
+
+            m_allKeys.append(matchedKeys);
+            buildKeyTree(m_allKeys);
+
+            const bool hasMore = (m_scanCursor != 0);
+            m_loadMoreBtn->setEnabled(hasMore);
+            m_loadMoreBtn->setText(QStringLiteral("加载更多"));
+            m_loadAllBtn->setEnabled(true);
+            m_loadAllBtn->setText(QStringLiteral("加载全部"));
+            if (hasMore) {
+                m_keyCountLabel->setText(QString("已加载 %1 个键...").arg(m_allKeys.size()));
+            } else {
+                m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
+            }
+        });
+        return;
 
         buildKeyTree(m_allKeys);
 
@@ -791,6 +938,9 @@ void KeyManagerPage::buildKeyTree(const QStringList &keys)
 void KeyManagerPage::showKeyDetail(const QString &key)
 {
     if (!m_client) return;
+    ++m_keyDetailRequestId;
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
     m_currentKey = key;
     m_detailKeyLabel->setText(key);
     m_saveCount = 0;
@@ -798,12 +948,16 @@ void KeyManagerPage::showKeyDetail(const QString &key)
 
     showDetailDrawer();
 
-    m_client->type(key, [this, key](const QVariant &res, const QString &err) {
+    m_client->type(key, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QString t = res.toString();
         m_detailTypeLabel->setText(QString("类型: %1").arg(t.toUpper()));
 
-        m_client->ttl(key, [this](const QVariant &ttlRes, const QString &) {
+        m_client->ttl(key, [this, key, detailClient, detailRequestId](const QVariant &ttlRes, const QString &) {
+            if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+                return;
             qlonglong ttl = ttlRes.toLongLong();
             if (ttl < 0) {
                 m_detailTtlLabel->setText(QStringLiteral("TTL: 永不过期"));
@@ -824,7 +978,11 @@ void KeyManagerPage::showKeyDetail(const QString &key)
 
 void KeyManagerPage::showStringDetail(const QString &key)
 {
-    m_client->get(key, [this](const QVariant &res, const QString &err) {
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
+    m_client->get(key, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QString raw = res.toString();
         QJsonParseError parseErr;
@@ -842,7 +1000,11 @@ void KeyManagerPage::showStringDetail(const QString &key)
 
 void KeyManagerPage::showHashDetail(const QString &key)
 {
-    m_client->hgetall(key, [this](const QVariant &res, const QString &err) {
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
+    m_client->hgetall(key, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QVariantList list = res.toList();
         m_hashTable->setRowCount(0);
@@ -858,7 +1020,11 @@ void KeyManagerPage::showHashDetail(const QString &key)
 
 void KeyManagerPage::showListDetail(const QString &key)
 {
-    m_client->lrange(key, 0, 999, [this](const QVariant &res, const QString &err) {
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
+    m_client->lrange(key, 0, 999, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QVariantList list = res.toList();
         m_listTable->setRowCount(0);
@@ -873,7 +1039,11 @@ void KeyManagerPage::showListDetail(const QString &key)
 
 void KeyManagerPage::showSetDetail(const QString &key)
 {
-    m_client->smembers(key, [this](const QVariant &res, const QString &err) {
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
+    m_client->smembers(key, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QVariantList list = res.toList();
         m_setTable->setRowCount(0);
@@ -887,7 +1057,11 @@ void KeyManagerPage::showSetDetail(const QString &key)
 
 void KeyManagerPage::showZSetDetail(const QString &key)
 {
-    m_client->zrange(key, 0, 999, true, [this](const QVariant &res, const QString &err) {
+    const RedisClient *detailClient = m_client;
+    const quint64 detailRequestId = m_keyDetailRequestId;
+    m_client->zrange(key, 0, 999, true, [this, key, detailClient, detailRequestId](const QVariant &res, const QString &err) {
+        if (m_client != detailClient || m_keyDetailRequestId != detailRequestId || m_currentKey != key)
+            return;
         if (!err.isEmpty()) return;
         QVariantList list = res.toList();
         m_zsetTable->setRowCount(0);
