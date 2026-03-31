@@ -5,16 +5,22 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <QMessageBox>
+#include <QDialog>
 #include <QKeyEvent>
 #include <QResizeEvent>
 #include <QMap>
 #include <QVariantAnimation>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QJsonParseError>
+#include <QCollator>
 #include <QSignalBlocker>
 #include <QTimer>
 #include <memory>
+#include <algorithm>
 #include <functional>
 
 KeyManagerPage::KeyManagerPage(QWidget *parent)
@@ -55,6 +61,10 @@ void KeyManagerPage::clearAll()
     m_currentKey.clear();
     m_allKeys.clear();
     m_scanCursor = 0;
+    m_isJsonValue = false;
+    m_jsonSaveCompact = false;
+    if (m_formatJsonBtn)
+        m_formatJsonBtn->setEnabled(false);
     hideDetailDrawer();
 }
 
@@ -97,7 +107,7 @@ void KeyManagerPage::setupUI()
 
     m_searchEdit = new QLineEdit(topWidget);
     m_searchEdit->setObjectName("searchLineEdit");
-    m_searchEdit->setPlaceholderText(QStringLiteral("搜索 key (支持 * 通配符)..."));
+    m_searchEdit->setPlaceholderText(QStringLiteral("搜索 key（支持 * 通配符）"));
     m_searchEdit->setFont(FontManager::getTextFont(topWidget));
     topLayout->addWidget(m_searchEdit);
 
@@ -163,7 +173,7 @@ void KeyManagerPage::setupUI()
         "QTreeWidget::branch:open:has-children:has-siblings { image: none; border-image: none; }");
     listLayout->addWidget(m_keyTree, 1);
 
-    // Fixed bottom bar — always visible, pinned at bottom
+    // Fixed bottom bar 鈥?always visible, pinned at bottom
     auto *bottomWidget = new QWidget(listWidget);
     bottomWidget->setFixedHeight(36);
     bottomWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -194,7 +204,7 @@ void KeyManagerPage::setupUI()
 
     contentLayout->addWidget(listWidget, 1);
 
-    // Detail drawer container — starts with width 0
+    // Detail drawer container 鈥?starts with width 0
     m_detailContainer = new QWidget(contentWidget);
     m_detailContainer->setMaximumWidth(0);
     m_detailContainer->setMinimumWidth(0);
@@ -278,6 +288,13 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
         "QPushButton { background-color: rgb(220,38,38); color: white; border-radius: 4px; padding: 4px 12px; border: none; }"
         "QPushButton:hover { background-color: rgb(239,68,68); }");
     row1->addWidget(m_deleteKeyBtn);
+
+    m_renameKeyBtn = new QPushButton(QStringLiteral("重命名"), parent);
+    m_renameKeyBtn->setStyleSheet(
+        "QPushButton { background-color: rgba(147,51,234,1); color: white; border-radius: 4px; padding: 4px 12px; border: none; }"
+        "QPushButton:hover { background-color: rgba(171,83,255,1); }");
+    row1->insertWidget(2, m_renameKeyBtn);
+
     infoLayout->addLayout(row1);
 
     // Row 2: type, ttl info, ttl editor
@@ -382,6 +399,11 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     m_saveStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 12px; font-weight: bold;");
     btnBar->addWidget(m_saveStatusLabel);
     btnBar->addStretch();
+    m_formatJsonBtn = new QPushButton(QStringLiteral("JSON 格式化"), parent);
+    m_formatJsonBtn->setObjectName("refreshButton");
+    m_formatJsonBtn->setFont(FontManager::getTextFont(this));
+    m_formatJsonBtn->setEnabled(false);
+    btnBar->addWidget(m_formatJsonBtn);
     m_saveBtn = new QPushButton(QStringLiteral("保存修改"), parent);
     m_saveBtn->setObjectName("addButton");
     m_saveBtn->setFont(FontManager::getTextFont(this));
@@ -389,7 +411,9 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     layout->addLayout(btnBar);
 
     connect(m_closeDetailBtn, &QPushButton::clicked, this, &KeyManagerPage::hideDetailDrawer);
+    connect(m_renameKeyBtn, &QPushButton::clicked, this, &KeyManagerPage::onRenameKey);
     connect(m_deleteKeyBtn, &QPushButton::clicked, this, &KeyManagerPage::onDeleteKey);
+    connect(m_formatJsonBtn, &QPushButton::clicked, this, &KeyManagerPage::onFormatJson);
     connect(m_saveBtn, &QPushButton::clicked, this, &KeyManagerPage::onSaveValue);
     connect(m_ttlSetBtn, &QPushButton::clicked, this, [this]() {
         if (!m_client || m_currentKey.isEmpty()) return;
@@ -465,7 +489,7 @@ void KeyManagerPage::onLoadMore()
 {
     if (!m_client || m_scanCursor == 0) return;
     m_loadMoreBtn->setEnabled(false);
-    m_loadMoreBtn->setText(QStringLiteral("加载中..."));
+    m_loadMoreBtn->setText(QStringLiteral("鍔犺浇涓?.."));
     loadKeys(false);
 }
 
@@ -479,8 +503,8 @@ void KeyManagerPage::onLoadAll()
 
     m_loadMoreBtn->setEnabled(false);
     m_loadAllBtn->setEnabled(false);
-    m_loadAllBtn->setText(QStringLiteral("加载中..."));
-    m_keyCountLabel->setText(QStringLiteral("加载中..."));
+    m_loadAllBtn->setText(QStringLiteral("鍔犺浇涓?.."));
+    m_keyCountLabel->setText(QStringLiteral("鍔犺浇涓?.."));
 
     loadAllBatch();
 }
@@ -507,7 +531,7 @@ void KeyManagerPage::loadAllBatch()
             return;
         }
 
-        QVariantList arr = result.toList();
+        const QVariantList arr = result.toList();
         if (arr.size() < 2) return;
 
         m_scanCursor = arr[0].toLongLong();
@@ -524,15 +548,15 @@ void KeyManagerPage::loadAllBatch()
                 return;
 
             m_allKeys.append(matchedKeys);
-            m_keyCountLabel->setText(QString("鍔犺浇涓?.. %1 涓敭").arg(m_allKeys.size()));
+            m_keyCountLabel->setText(QString("加载中... %1 个键").arg(m_allKeys.size()));
 
             if (m_scanCursor == 0) {
                 buildKeyTree(m_allKeys);
                 m_loadMoreBtn->setEnabled(false);
-                m_loadMoreBtn->setText(QStringLiteral("鍔犺浇鏇村"));
+                m_loadMoreBtn->setText(QStringLiteral("加载更多"));
                 m_loadAllBtn->setEnabled(true);
-                m_loadAllBtn->setText(QStringLiteral("鍔犺浇鍏ㄩ儴"));
-                m_keyCountLabel->setText(QString("鍏?%1 涓敭").arg(m_allKeys.size()));
+                m_loadAllBtn->setText(QStringLiteral("加载全部"));
+                m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
             } else {
                 QTimer::singleShot(0, this, [this, requestId]() {
                     if (m_keyListRequestId == requestId)
@@ -540,26 +564,8 @@ void KeyManagerPage::loadAllBatch()
                 });
             }
         });
-        return;
-
-        m_keyCountLabel->setText(QString("加载中... %1 个键").arg(m_allKeys.size()));
-
-        if (m_scanCursor == 0) {
-            buildKeyTree(m_allKeys);
-            m_loadMoreBtn->setEnabled(false);
-            m_loadMoreBtn->setText(QStringLiteral("加载更多"));
-            m_loadAllBtn->setEnabled(true);
-            m_loadAllBtn->setText(QStringLiteral("加载全部"));
-            m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
-        } else {
-            QTimer::singleShot(0, this, [this, requestId]() {
-                if (m_keyListRequestId == requestId)
-                    loadAllBatch();
-            });
-        }
     });
 }
-
 void KeyManagerPage::onDbChanged(int index)
 {
     if (!m_client) return;
@@ -648,6 +654,103 @@ void KeyManagerPage::onDeleteKey()
     });
 }
 
+void KeyManagerPage::onRenameKey()
+{
+    if (!m_client || m_currentKey.isEmpty())
+        return;
+
+    const QString oldKey = m_currentKey;
+    QDialog dialog(this);
+    dialog.setWindowTitle(QStringLiteral("重命名 Key"));
+    dialog.setModal(true);
+    dialog.setMinimumWidth(440);
+    dialog.setMaximumWidth(520);
+    dialog.setStyleSheet(
+        "QDialog { background-color: rgb(17,24,39); color: white; }"
+        "QLabel { color: rgb(156,163,175); }"
+        "QLineEdit {"
+        "  background-color: rgb(31,41,55); color: white;"
+        "  border: 1px solid rgb(55,65,81); border-radius: 6px; padding: 8px;"
+        "}"
+        "QLineEdit:focus { border-color: rgba(147,51,234,1); }"
+        "QPushButton#yesBtn {"
+        "  background-color: rgba(147,51,234,1); color: white;"
+        "  border-radius: 6px; padding: 8px 24px; border: none; font-weight: bold;"
+        "}"
+        "QPushButton#yesBtn:hover { background-color: rgba(171,83,255,1); }"
+        "QPushButton#noBtn {"
+        "  background-color: rgb(55,65,81); color: white;"
+        "  border-radius: 6px; padding: 8px 24px; border: none;"
+        "}"
+        "QPushButton#noBtn:hover { background-color: rgb(75,85,99); }");
+
+    auto *mainLayout = new QVBoxLayout(&dialog);
+    mainLayout->setContentsMargins(24, 20, 24, 20);
+    mainLayout->setSpacing(14);
+
+    auto *titleLabel = new QLabel(QStringLiteral("修改当前 Key 名称"), &dialog);
+    titleLabel->setStyleSheet("color: white; font-size: 18px; font-weight: bold;");
+    mainLayout->addWidget(titleLabel);
+
+    auto *hintLabel = new QLabel(QStringLiteral("新的 Key 名称"), &dialog);
+    mainLayout->addWidget(hintLabel);
+
+    auto *edit = new QLineEdit(oldKey, &dialog);
+    edit->selectAll();
+    mainLayout->addWidget(edit);
+
+    auto *btnRow = new QHBoxLayout;
+    btnRow->addStretch();
+    auto *noBtn = new QPushButton(QStringLiteral("否"), &dialog);
+    noBtn->setObjectName("noBtn");
+    btnRow->addWidget(noBtn);
+    auto *yesBtn = new QPushButton(QStringLiteral("是"), &dialog);
+    yesBtn->setObjectName("yesBtn");
+    yesBtn->setDefault(true);
+    btnRow->addWidget(yesBtn);
+    mainLayout->addLayout(btnRow);
+
+    connect(noBtn, &QPushButton::clicked, &dialog, &QDialog::reject);
+    connect(yesBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
+    connect(edit, &QLineEdit::returnPressed, &dialog, &QDialog::accept);
+
+    edit->setFocus();
+
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    const QString newKey = edit->text().trimmed();
+    if (newKey.isEmpty() || newKey == oldKey)
+        return;
+
+    m_client->exists(newKey, [this, oldKey, newKey](const QVariant &existsRes, const QString &existsErr) {
+        if (!existsErr.isEmpty()) {
+            QMessageBox::warning(this, QStringLiteral("错误"), existsErr);
+            return;
+        }
+
+        if (existsRes.toLongLong() > 0) {
+            QMessageBox::warning(this, QStringLiteral("重命名失败"),
+                                 QStringLiteral("目标 Key \"%1\" 已存在，请使用其他名称。").arg(newKey));
+            return;
+        }
+
+        ++m_keyListRequestId;
+        ++m_keyDetailRequestId;
+        m_client->rename(oldKey, newKey, [this, newKey](const QVariant &, const QString &renameErr) {
+            if (!renameErr.isEmpty()) {
+                QMessageBox::warning(this, QStringLiteral("重命名失败"), renameErr);
+                return;
+            }
+
+            m_currentKey = newKey;
+            m_detailKeyLabel->setText(newKey);
+            loadKeys(true);
+            showKeyDetail(newKey);
+        });
+    });
+}
+
 void KeyManagerPage::onSaveValue()
 {
     if (!m_client || m_currentKey.isEmpty()) return;
@@ -661,7 +764,12 @@ void KeyManagerPage::onSaveValue()
             QJsonParseError parseErr;
             QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &parseErr);
             if (parseErr.error == QJsonParseError::NoError && !doc.isNull()) {
-                valueToSave = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+                QByteArray jsonBytes = doc.toJson(m_jsonSaveCompact
+                                                  ? QJsonDocument::Compact
+                                                  : QJsonDocument::Indented);
+                if (!m_jsonSaveCompact && jsonBytes.endsWith('\n'))
+                    jsonBytes.chop(1);
+                valueToSave = QString::fromUtf8(jsonBytes);
             } else {
                 QMessageBox box(QMessageBox::Warning, QStringLiteral("JSON 格式错误"),
                     QStringLiteral("当前内容不是合法的 JSON 格式，是否仍然保存原始文本？"),
@@ -684,13 +792,37 @@ void KeyManagerPage::onSaveValue()
     }
 }
 
+void KeyManagerPage::onFormatJson()
+{
+    if (m_valueStack->currentIndex() != 0)
+        return;
+
+    const QString text = m_stringEdit->toPlainText();
+    QJsonParseError parseErr;
+    const QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &parseErr);
+    if (parseErr.error != QJsonParseError::NoError || doc.isNull()) {
+        QMessageBox::warning(this, QStringLiteral("JSON 格式化失败"),
+                             QStringLiteral("当前内容不是合法的 JSON，无法格式化。"));
+        return;
+    }
+
+    m_isJsonValue = true;
+    if (doc.isArray() && doc.array().isEmpty()) {
+        m_stringEdit->setPlainText(QStringLiteral("[]"));
+    } else if (doc.isObject() && doc.object().isEmpty()) {
+        m_stringEdit->setPlainText(QStringLiteral("{}"));
+    } else {
+        m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
+    }
+}
+
 void KeyManagerPage::flashSaveStatus()
 {
     QString text;
     if (m_saveCount <= 1)
         text = QStringLiteral("\u2713 已保存");
     else
-        text = QString("\u2713 已保存 (%1)").arg(m_saveCount);
+        text = QString("\u2713 已保存(%1)").arg(m_saveCount);
 
     m_saveStatusLabel->setText(text);
     m_saveStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 12px; font-weight: bold;");
@@ -812,7 +944,7 @@ void KeyManagerPage::loadKeys(bool reset)
             return;
         }
 
-        QVariantList arr = result.toList();
+        const QVariantList arr = result.toList();
         if (arr.size() < 2) return;
 
         m_scanCursor = arr[0].toLongLong();
@@ -842,23 +974,8 @@ void KeyManagerPage::loadKeys(bool reset)
                 m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
             }
         });
-        return;
-
-        buildKeyTree(m_allKeys);
-
-        bool hasMore = (m_scanCursor != 0);
-        m_loadMoreBtn->setEnabled(hasMore);
-        m_loadMoreBtn->setText(QStringLiteral("加载更多"));
-        m_loadAllBtn->setEnabled(true);
-        m_loadAllBtn->setText(QStringLiteral("加载全部"));
-        if (hasMore) {
-            m_keyCountLabel->setText(QString("已加载 %1 个键...").arg(m_allKeys.size()));
-        } else {
-            m_keyCountLabel->setText(QString("共 %1 个键").arg(m_allKeys.size()));
-        }
     });
 }
-
 QTreeWidgetItem *KeyManagerPage::findOrCreateGroup(QTreeWidgetItem *parent, const QString &segment)
 {
     for (int i = 0; i < parent->childCount(); i++) {
@@ -877,10 +994,19 @@ void KeyManagerPage::buildKeyTree(const QStringList &keys)
 {
     m_keyTree->clear();
 
+    QStringList sortedKeys = keys;
+    QCollator collator;
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+    collator.setNumericMode(true);
+    std::sort(sortedKeys.begin(), sortedKeys.end(),
+              [&collator](const QString &lhs, const QString &rhs) {
+        return collator.compare(lhs, rhs) < 0;
+    });
+
     QMap<QString, QTreeWidgetItem*> groupCache;
     auto *invisibleRoot = m_keyTree->invisibleRootItem();
 
-    for (const QString &key : keys) {
+    for (const QString &key : sortedKeys) {
         QStringList parts = key.split(':');
 
         if (parts.size() <= 1) {
@@ -945,6 +1071,10 @@ void KeyManagerPage::showKeyDetail(const QString &key)
     m_detailKeyLabel->setText(key);
     m_saveCount = 0;
     m_saveStatusLabel->clear();
+    m_isJsonValue = false;
+    m_jsonSaveCompact = false;
+    if (m_formatJsonBtn)
+        m_formatJsonBtn->setEnabled(false);
 
     showDetailDrawer();
 
@@ -989,9 +1119,20 @@ void KeyManagerPage::showStringDetail(const QString &key)
         QJsonDocument doc = QJsonDocument::fromJson(raw.toUtf8(), &parseErr);
         if (parseErr.error == QJsonParseError::NoError && !doc.isNull()) {
             m_isJsonValue = true;
-            m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
+            const QString compactText = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+            m_jsonSaveCompact = (raw.trimmed() == compactText);
+            m_formatJsonBtn->setEnabled(true);
+            if (doc.isArray() && doc.array().isEmpty()) {
+                m_stringEdit->setPlainText(QStringLiteral("[]"));
+            } else if (doc.isObject() && doc.object().isEmpty()) {
+                m_stringEdit->setPlainText(QStringLiteral("{}"));
+            } else {
+                m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
+            }
         } else {
             m_isJsonValue = false;
+            m_jsonSaveCompact = false;
+            m_formatJsonBtn->setEnabled(false);
             m_stringEdit->setPlainText(raw);
         }
         m_valueStack->setCurrentIndex(0);

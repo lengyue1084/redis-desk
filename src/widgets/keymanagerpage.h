@@ -36,7 +36,9 @@ private slots:
     void onAdd();
     void onKeySelected();
     void onDeleteKey();
+    void onRenameKey();
     void onSaveValue();
+    void onFormatJson();
     void onLoadMore();
     void onLoadAll();
     void onDbChanged(int index);
@@ -90,6 +92,7 @@ private:
     QLabel *m_detailTtlLabel;
     QSpinBox *m_ttlSpin;
     QPushButton *m_ttlSetBtn;
+    QPushButton *m_renameKeyBtn;
     QPushButton *m_deleteKeyBtn;
 
     // Value editors
@@ -102,12 +105,14 @@ private:
     QLabel *m_emptyLabel;          // index 5: empty
 
     QPushButton *m_saveBtn;
+    QPushButton *m_formatJsonBtn;
     QLabel *m_saveStatusLabel;
     int m_saveCount = 0;
     void flashSaveStatus();
 
     // JSON detection
     bool m_isJsonValue = false;
+    bool m_jsonSaveCompact = false;
 
     // SCAN state
     qlonglong m_scanCursor = 0;
