@@ -63,6 +63,8 @@ void KeyManagerPage::clearAll()
     m_scanCursor = 0;
     m_isJsonValue = false;
     m_jsonSaveCompact = false;
+    if (m_jsonStatusLabel)
+        m_jsonStatusLabel->clear();
     if (m_formatJsonBtn)
         m_formatJsonBtn->setEnabled(false);
     hideDetailDrawer();
@@ -399,10 +401,12 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     m_saveStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 12px; font-weight: bold;");
     btnBar->addWidget(m_saveStatusLabel);
     btnBar->addStretch();
+    m_jsonStatusLabel = new QLabel(parent);
+    m_jsonStatusLabel->setStyleSheet("font-size: 11px; border: none; background: transparent;");
+    btnBar->addWidget(m_jsonStatusLabel);
     m_formatJsonBtn = new QPushButton(QStringLiteral("JSON 格式化"), parent);
     m_formatJsonBtn->setObjectName("refreshButton");
     m_formatJsonBtn->setFont(FontManager::getTextFont(this));
-    m_formatJsonBtn->setEnabled(false);
     btnBar->addWidget(m_formatJsonBtn);
     m_saveBtn = new QPushButton(QStringLiteral("保存修改"), parent);
     m_saveBtn->setObjectName("addButton");
@@ -415,6 +419,7 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     connect(m_deleteKeyBtn, &QPushButton::clicked, this, &KeyManagerPage::onDeleteKey);
     connect(m_formatJsonBtn, &QPushButton::clicked, this, &KeyManagerPage::onFormatJson);
     connect(m_saveBtn, &QPushButton::clicked, this, &KeyManagerPage::onSaveValue);
+
     connect(m_ttlSetBtn, &QPushButton::clicked, this, [this]() {
         if (!m_client || m_currentKey.isEmpty()) return;
         int ttl = m_ttlSpin->value();
@@ -801,12 +806,13 @@ void KeyManagerPage::onFormatJson()
     QJsonParseError parseErr;
     const QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &parseErr);
     if (parseErr.error != QJsonParseError::NoError || doc.isNull()) {
-        QMessageBox::warning(this, QStringLiteral("JSON 格式化失败"),
-                             QStringLiteral("当前内容不是合法的 JSON，无法格式化。"));
+        m_jsonStatusLabel->setText(QStringLiteral("非法的 JSON 格式"));
+        m_jsonStatusLabel->setStyleSheet("color: rgb(239,68,68); font-size: 11px;");
         return;
     }
 
     m_isJsonValue = true;
+    m_jsonSaveCompact = false;
     if (doc.isArray() && doc.array().isEmpty()) {
         m_stringEdit->setPlainText(QStringLiteral("[]"));
     } else if (doc.isObject() && doc.object().isEmpty()) {
@@ -814,6 +820,8 @@ void KeyManagerPage::onFormatJson()
     } else {
         m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
     }
+    m_jsonStatusLabel->setText(QStringLiteral("已格式化"));
+    m_jsonStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 11px;");
 }
 
 void KeyManagerPage::flashSaveStatus()
@@ -992,6 +1000,23 @@ QTreeWidgetItem *KeyManagerPage::findOrCreateGroup(QTreeWidgetItem *parent, cons
 
 void KeyManagerPage::buildKeyTree(const QStringList &keys)
 {
+    // Save expanded group paths before clearing
+    QSet<QString> expandedPaths;
+    std::function<void(QTreeWidgetItem*)> collectExpanded = [&](QTreeWidgetItem *item) {
+        for (int i = 0; i < item->childCount(); i++) {
+            auto *child = item->child(i);
+            if (child->childCount() > 0) {
+                if (child->isExpanded()) {
+                    QString path = child->data(0, Qt::UserRole).toString();
+                    if (!path.isEmpty())
+                        expandedPaths.insert(path);
+                }
+                collectExpanded(child);
+            }
+        }
+    };
+    collectExpanded(m_keyTree->invisibleRootItem());
+
     m_keyTree->clear();
 
     QStringList sortedKeys = keys;
@@ -1031,6 +1056,7 @@ void KeyManagerPage::buildKeyTree(const QStringList &keys)
                 group->setText(0, parts[i]);
                 group->setIcon(0, QIcon(":/images/icons/icon-data-overview.png"));
                 group->setFlags(group->flags() & ~Qt::ItemIsSelectable);
+                group->setData(0, Qt::UserRole, groupPath);
                 groupCache[groupPath] = group;
                 parentItem = group;
             }
@@ -1041,8 +1067,6 @@ void KeyManagerPage::buildKeyTree(const QStringList &keys)
         leaf->setIcon(0, QIcon(":/images/icons/icon-key.png"));
         leaf->setData(0, Qt::UserRole, key);
     }
-
-    m_keyTree->collapseAll();
 
     for (int i = 0; i < invisibleRoot->childCount(); i++) {
         auto *topItem = invisibleRoot->child(i);
@@ -1059,6 +1083,36 @@ void KeyManagerPage::buildKeyTree(const QStringList &keys)
             topItem->setText(0, QString("%1 (%2)").arg(topItem->text(0)).arg(keyCount));
         }
     }
+
+    // Restore previously expanded groups
+    std::function<void(QTreeWidgetItem*)> restoreExpanded = [&](QTreeWidgetItem *item) {
+        for (int i = 0; i < item->childCount(); i++) {
+            auto *child = item->child(i);
+            if (child->childCount() > 0) {
+                QString path = child->data(0, Qt::UserRole).toString();
+                if (!path.isEmpty() && expandedPaths.contains(path))
+                    child->setExpanded(true);
+                restoreExpanded(child);
+            }
+        }
+    };
+    restoreExpanded(invisibleRoot);
+
+    // Restore selection for the currently viewed key
+    if (!m_currentKey.isEmpty()) {
+        std::function<void(QTreeWidgetItem*)> restoreSelection = [&](QTreeWidgetItem *item) {
+            for (int i = 0; i < item->childCount(); i++) {
+                auto *child = item->child(i);
+                if (child->childCount() == 0
+                        && child->data(0, Qt::UserRole).toString() == m_currentKey) {
+                    m_keyTree->setCurrentItem(child);
+                    return;
+                }
+                restoreSelection(child);
+            }
+        };
+        restoreSelection(invisibleRoot);
+    }
 }
 
 void KeyManagerPage::showKeyDetail(const QString &key)
@@ -1071,6 +1125,7 @@ void KeyManagerPage::showKeyDetail(const QString &key)
     m_detailKeyLabel->setText(key);
     m_saveCount = 0;
     m_saveStatusLabel->clear();
+    m_jsonStatusLabel->clear();
     m_isJsonValue = false;
     m_jsonSaveCompact = false;
     if (m_formatJsonBtn)
@@ -1121,7 +1176,6 @@ void KeyManagerPage::showStringDetail(const QString &key)
             m_isJsonValue = true;
             const QString compactText = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
             m_jsonSaveCompact = (raw.trimmed() == compactText);
-            m_formatJsonBtn->setEnabled(true);
             if (doc.isArray() && doc.array().isEmpty()) {
                 m_stringEdit->setPlainText(QStringLiteral("[]"));
             } else if (doc.isObject() && doc.object().isEmpty()) {
@@ -1132,10 +1186,10 @@ void KeyManagerPage::showStringDetail(const QString &key)
         } else {
             m_isJsonValue = false;
             m_jsonSaveCompact = false;
-            m_formatJsonBtn->setEnabled(false);
             m_stringEdit->setPlainText(raw);
         }
         m_valueStack->setCurrentIndex(0);
+        m_formatJsonBtn->setEnabled(true);
     });
 }
 

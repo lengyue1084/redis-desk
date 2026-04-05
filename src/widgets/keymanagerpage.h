@@ -107,6 +107,7 @@ private:
     QPushButton *m_saveBtn;
     QPushButton *m_formatJsonBtn;
     QLabel *m_saveStatusLabel;
+    QLabel *m_jsonStatusLabel;
     int m_saveCount = 0;
     void flashSaveStatus();
 
