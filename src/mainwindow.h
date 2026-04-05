@@ -15,6 +15,7 @@
 #include "widgets/datasummarypage.h"
 #include "widgets/monitormenupage.h"
 #include "widgets/configmenupage.h"
+#include "widgets/commandlinepage.h"
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +36,7 @@ private:
     DataSummaryPage *m_dataSummaryPage;
     MonitorMenuPage *m_monitorMenuPage;
     ConfigMenuPage *m_configMenuPage;
+    CommandLinePage *m_commandLinePage;
 
     bool m_isMaximized;
     QRect m_normalGeometry;
@@ -77,6 +79,7 @@ private slots:
     void onImportConnections();
     void onExportConnections();
     void toggleSidebar();
+    void onOpenCommandLine();
 
 private:
     void setupUI();

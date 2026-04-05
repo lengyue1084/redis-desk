@@ -32,7 +32,8 @@ enum class LeftMenu{
     KeyManager,
     DataSummar,
     MonitorMenu,
-    ConfigMenu
+    ConfigMenu,
+    CommandLine
 };
 
 };

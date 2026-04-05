@@ -69,6 +69,9 @@ void ConnectionPanel::setupUI()
                 menu.addAction(QStringLiteral("断开连接"), this, [this]() {
                     disconnectCurrent();
                 });
+                menu.addAction(QStringLiteral("命令行"), this, [this]() {
+                    emit openCommandLine();
+                });
             }
 
             menu.addAction(QStringLiteral("编辑"), this, [this, connId]() {

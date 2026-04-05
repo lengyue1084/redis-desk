@@ -12,6 +12,7 @@ public:
     ~LeftMenuPanel();
 
     void setCollapsed(bool collapsed);
+    void simulateClick(int menuIndex);
 
 signals:
     void menuClicked(int menuIndex);
@@ -21,6 +22,7 @@ private:
     QPushButton *m_keyManagerMenuPushButton;
     QPushButton *m_monitorMenuPushButton;
     QPushButton *m_configMenuPushButton;
+    QPushButton *m_commandLineMenuPushButton;
     QFont m_menuFontSize;
     QList<QPushButton*> m_menuButtonList;
     QPushButton *m_currentMenuButton;

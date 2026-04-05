@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include "constants/constants.h"
+#include "constants/enums.h"
 #include "utils/dpitools.h"
 #include "widgets/righttopwidget.h"
 #include "dialogs/settingsdialog.h"
@@ -32,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_sidebarAnim(nullptr)
     , m_titleLabel(nullptr)
     , m_clientPanelWidget(nullptr)
+    , m_commandLinePage(nullptr)
     , m_expandedWidth(0)
 {
     setObjectName("techBackground");
@@ -66,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent)
         if (m_statusLabel)
             m_statusLabel->setText(QStringLiteral("连接错误: %1").arg(err));
     });
+    connect(m_connectionPanel, &ConnectionPanel::openCommandLine,
+            this, &MainWindow::onOpenCommandLine);
 
     QMetaObject::invokeMethod(m_connectionPanel, &ConnectionPanel::autoConnectFirst,
                               Qt::QueuedConnection);
@@ -79,6 +83,7 @@ void MainWindow::onConnectionEstablished(RedisClient *client)
     m_dataSummaryPage->setClient(client);
     m_monitorMenuPage->setClient(client);
     m_configMenuPage->setClient(client);
+    m_commandLinePage->setClient(client);
     if (m_statusLabel)
         m_statusLabel->setText(QStringLiteral("已连接"));
 }
@@ -89,6 +94,7 @@ void MainWindow::onConnectionLost()
     m_dataSummaryPage->clearAll();
     m_monitorMenuPage->clearAll();
     m_configMenuPage->clearAll();
+    m_commandLinePage->clearAll();
     if (m_statusLabel)
         m_statusLabel->setText(QStringLiteral("未连接"));
 }
@@ -96,6 +102,13 @@ void MainWindow::onConnectionLost()
 void MainWindow::changeRightContentWidget(int menuIndex)
 {
     m_rightStackedWidget->setCurrentIndex(menuIndex);
+}
+
+void MainWindow::onOpenCommandLine()
+{
+    const int idx = static_cast<int>(Menu::LeftMenu::CommandLine);
+    m_leftMenuPanel->simulateClick(idx);
+    m_rightStackedWidget->setCurrentIndex(idx);
 }
 
 void MainWindow::setupUI()
@@ -357,6 +370,9 @@ void MainWindow::setupPages()
 
     m_configMenuPage = new ConfigMenuPage(this);
     m_rightStackedWidget->addWidget(m_configMenuPage);
+
+    m_commandLinePage = new CommandLinePage(this);
+    m_rightStackedWidget->addWidget(m_commandLinePage);
 }
 
 // Mouse events

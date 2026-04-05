@@ -32,6 +32,8 @@ void LeftMenuPanel::setupUI()
     m_menuButtonList.append(m_monitorMenuPushButton);
     m_configMenuPushButton= createMenuButton("配置管理",":/images/icons/icon-setting.png",Menu::LeftMenu::ConfigMenu);
     m_menuButtonList.append(m_configMenuPushButton);
+    m_commandLineMenuPushButton = createMenuButton(QStringLiteral("命令行"),":/images/icons/icon-client-active.png",Menu::LeftMenu::CommandLine);
+    m_menuButtonList.append(m_commandLineMenuPushButton);
     foreach (QPushButton *button, m_menuButtonList) {
         m_layout->addWidget(button);
         connect(button,&QPushButton::clicked,this,&LeftMenuPanel::onMenuButtonClicked);
@@ -39,8 +41,17 @@ void LeftMenuPanel::setupUI()
     selectMenuButton(m_keyManagerMenuPushButton);
 }
 
-void LeftMenuPanel::setCollapsed(bool collapsed)
+void LeftMenuPanel::simulateClick(int menuIndex)
 {
+    for (QPushButton *btn : m_menuButtonList) {
+        if (btn->property("menu-index").toInt() == menuIndex) {
+            selectMenuButton(btn);
+            return;
+        }
+    }
+}
+
+void LeftMenuPanel::setCollapsed(bool collapsed){
     m_collapsed = collapsed;
 
     if (collapsed) {

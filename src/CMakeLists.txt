@@ -13,6 +13,7 @@ set(HEADERS
     widgets/datasummarypage.h
     widgets/monitormenupage.h
     widgets/configmenupage.h
+    widgets/commandlinepage.h
     delegates/base/basedelegate.h
     delegates/connectionpanel/connectionpaneldelegate.h
     dialogs/connectiondialog.h
@@ -35,6 +36,7 @@ set(SOURCES
     widgets/datasummarypage.cpp
     widgets/monitormenupage.cpp
     widgets/configmenupage.cpp
+    widgets/commandlinepage.cpp
     delegates/base/basedelegate.cpp
     delegates/connectionpanel/connectionpaneldelegate.cpp
     dialogs/connectiondialog.cpp

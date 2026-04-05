@@ -26,6 +26,7 @@ signals:
     void connectionEstablished(RedisClient *client);
     void connectionLost();
     void connectionError(const QString &error);
+    void openCommandLine();
 
 public slots:
     void addNewConnection();
