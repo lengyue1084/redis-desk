@@ -51,7 +51,7 @@ void ConnectionPanel::setupUI()
 
     connect(m_connectListView, &QWidget::customContextMenuRequested,
             this, [this](const QPoint &pos) {
-        QModelIndex index = m_connectListView->indexAt(pos);
+        const QModelIndex index = m_connectListView->indexAt(pos);
         QMenu menu;
         menu.setStyleSheet(
             "QMenu { background-color: rgb(31,41,55); color: white; border: 1px solid rgb(75,85,99); }"
@@ -59,9 +59,18 @@ void ConnectionPanel::setupUI()
 
         if (index.isValid()) {
             const QString connId = index.data(Qt::UserRole + 10).toString();
+            const bool isCurrentConnected = (connId == m_currentConnectionId && isConnected());
+
             menu.addAction(QStringLiteral("连接"), this, [this, index]() {
                 onItemDoubleClicked(index);
             });
+
+            if (isCurrentConnected) {
+                menu.addAction(QStringLiteral("断开连接"), this, [this]() {
+                    disconnectCurrent();
+                });
+            }
+
             menu.addAction(QStringLiteral("编辑"), this, [this, connId]() {
                 ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
                 if (cfg.id.isEmpty())
@@ -72,6 +81,7 @@ void ConnectionPanel::setupUI()
                     loadConnections();
                 }
             });
+
             menu.addSeparator();
             menu.addAction(QStringLiteral("删除"), this, [this, connId]() {
                 if (CommonHelper::confirm(this, QStringLiteral("确认"),
@@ -85,6 +95,7 @@ void ConnectionPanel::setupUI()
         } else {
             menu.addAction(QStringLiteral("新建连接"), this, &ConnectionPanel::addNewConnection);
         }
+
         menu.exec(m_connectListView->mapToGlobal(pos));
     });
 }
