@@ -495,7 +495,10 @@ void KeyManagerPage::hideDetailDrawer()
 void KeyManagerPage::onRefresh()
 {
     CommonHelper::spinRefreshIcon(m_refreshBtn);
+    const QString currentKey = m_currentKey;
     loadKeys(true);
+    if (m_client && !currentKey.isEmpty())
+        showKeyDetail(currentKey);
 }
 
 void KeyManagerPage::onSearch()

@@ -1,9 +1,10 @@
 #include "dialogs/settingsdialog.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
 #include <QFormLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QSettings>
+#include <QVBoxLayout>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
@@ -21,6 +22,7 @@ void SettingsDialog::setupUI()
         "QLabel { color: rgb(156,163,175); }"
         "QComboBox, QSpinBox { background-color: rgb(31,41,55); color: white; "
         "  border: 1px solid rgb(55,65,81); border-radius: 6px; padding: 8px; min-height: 20px; }"
+        "QComboBox:disabled, QSpinBox:disabled { color: rgb(209,213,219); }"
         "QComboBox QAbstractItemView { background-color: rgb(31,41,55); color: white; "
         "  border: 1px solid rgb(55,65,81); outline: none; }"
         "QComboBox QAbstractItemView::item:hover { background: rgba(147,51,234,0.3); }"
@@ -37,11 +39,13 @@ void SettingsDialog::setupUI()
     form->setSpacing(8);
 
     m_themeCombo = new QComboBox(this);
-    m_themeCombo->addItems({QStringLiteral("深色主题"), QStringLiteral("浅色主题")});
+    m_themeCombo->addItem(QStringLiteral("深色主题"));
+    m_themeCombo->setEnabled(false);
     form->addRow(QStringLiteral("主题"), m_themeCombo);
 
     m_langCombo = new QComboBox(this);
-    m_langCombo->addItems({QStringLiteral("简体中文"), QStringLiteral("English")});
+    m_langCombo->addItem(QStringLiteral("简体中文"));
+    m_langCombo->setEnabled(false);
     form->addRow(QStringLiteral("语言"), m_langCombo);
 
     m_refreshInterval = new QSpinBox(this);
@@ -68,16 +72,16 @@ void SettingsDialog::setupUI()
 void SettingsDialog::loadSettings()
 {
     QSettings s;
-    m_themeCombo->setCurrentIndex(s.value("settings/theme", 0).toInt());
-    m_langCombo->setCurrentIndex(s.value("settings/language", 0).toInt());
+    m_themeCombo->setCurrentIndex(0);
+    m_langCombo->setCurrentIndex(0);
     m_refreshInterval->setValue(s.value("settings/refreshInterval", 10).toInt());
 }
 
 void SettingsDialog::onSave()
 {
     QSettings s;
-    s.setValue("settings/theme", m_themeCombo->currentIndex());
-    s.setValue("settings/language", m_langCombo->currentIndex());
+    s.setValue("settings/theme", 0);
+    s.setValue("settings/language", 0);
     s.setValue("settings/refreshInterval", m_refreshInterval->value());
     accept();
 }
