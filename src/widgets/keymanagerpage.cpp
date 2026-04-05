@@ -63,8 +63,7 @@ void KeyManagerPage::clearAll()
     m_scanCursor = 0;
     m_isJsonValue = false;
     m_jsonSaveCompact = false;
-    if (m_jsonStatusLabel)
-        m_jsonStatusLabel->clear();
+    setJsonStatus(QString(), QString());
     if (m_formatJsonBtn)
         m_formatJsonBtn->setEnabled(false);
     hideDetailDrawer();
@@ -402,7 +401,21 @@ void KeyManagerPage::setupDetailPanel(QWidget *parent)
     btnBar->addWidget(m_saveStatusLabel);
     btnBar->addStretch();
     m_jsonStatusLabel = new QLabel(parent);
-    m_jsonStatusLabel->setStyleSheet("font-size: 11px; border: none; background: transparent;");
+    m_jsonStatusLabel->setFrameStyle(QFrame::NoFrame);
+    m_jsonStatusLabel->setLineWidth(0);
+    m_jsonStatusLabel->setMidLineWidth(0);
+    m_jsonStatusLabel->setIndent(0);
+    m_jsonStatusLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    m_jsonStatusLabel->setVisible(false);
+    m_jsonStatusLabel->setStyleSheet(
+        "QLabel {"
+        "color: rgb(107,114,128);"
+        "font-size: 11px;"
+        "border: none;"
+        "background: transparent;"
+        "padding: 0px;"
+        "margin: 0px 6px 0px 0px;"
+        "}");
     btnBar->addWidget(m_jsonStatusLabel);
     m_formatJsonBtn = new QPushButton(QStringLiteral("JSON 格式化"), parent);
     m_formatJsonBtn->setObjectName("refreshButton");
@@ -806,8 +819,7 @@ void KeyManagerPage::onFormatJson()
     QJsonParseError parseErr;
     const QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &parseErr);
     if (parseErr.error != QJsonParseError::NoError || doc.isNull()) {
-        m_jsonStatusLabel->setText(QStringLiteral("非法的 JSON 格式"));
-        m_jsonStatusLabel->setStyleSheet("color: rgb(239,68,68); font-size: 11px;");
+        setJsonStatus(QStringLiteral("非法的 JSON 格式"), QStringLiteral("rgb(239,68,68)"));
         return;
     }
 
@@ -820,8 +832,7 @@ void KeyManagerPage::onFormatJson()
     } else {
         m_stringEdit->setPlainText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
     }
-    m_jsonStatusLabel->setText(QStringLiteral("已格式化"));
-    m_jsonStatusLabel->setStyleSheet("color: rgb(34,197,94); font-size: 11px;");
+    setJsonStatus(QStringLiteral("已格式化"), QStringLiteral("rgb(34,197,94)"));
 }
 
 void KeyManagerPage::flashSaveStatus()
@@ -1125,7 +1136,7 @@ void KeyManagerPage::showKeyDetail(const QString &key)
     m_detailKeyLabel->setText(key);
     m_saveCount = 0;
     m_saveStatusLabel->clear();
-    m_jsonStatusLabel->clear();
+    setJsonStatus(QString(), QString());
     m_isJsonValue = false;
     m_jsonSaveCompact = false;
     if (m_formatJsonBtn)
@@ -1191,6 +1202,25 @@ void KeyManagerPage::showStringDetail(const QString &key)
         m_valueStack->setCurrentIndex(0);
         m_formatJsonBtn->setEnabled(true);
     });
+}
+
+void KeyManagerPage::setJsonStatus(const QString &text, const QString &color)
+{
+    if (!m_jsonStatusLabel)
+        return;
+
+    const bool hasText = !text.isEmpty();
+    m_jsonStatusLabel->setVisible(hasText);
+    m_jsonStatusLabel->setText(text);
+    m_jsonStatusLabel->setStyleSheet(QString(
+        "QLabel {"
+        "color: %1;"
+        "font-size: 11px;"
+        "border: none;"
+        "background: transparent;"
+        "padding: 0px;"
+        "margin: 0px 6px 0px 0px;"
+        "}").arg(hasText ? color : QStringLiteral("rgb(107,114,128)")));
 }
 
 void KeyManagerPage::showHashDetail(const QString &key)

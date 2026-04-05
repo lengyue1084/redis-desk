@@ -110,6 +110,7 @@ private:
     QLabel *m_jsonStatusLabel;
     int m_saveCount = 0;
     void flashSaveStatus();
+    void setJsonStatus(const QString &text, const QString &color);
 
     // JSON detection
     bool m_isJsonValue = false;
