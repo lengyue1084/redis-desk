@@ -1,8 +1,9 @@
 #include "dialogs/addkeydialog.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
 #include <QFormLayout>
+#include <QHBoxLayout>
 #include <QMessageBox>
+#include <QVBoxLayout>
 
 static const char *DIALOG_STYLE =
     "QDialog { background-color: rgb(17,24,39); color: white; }"
@@ -30,6 +31,21 @@ static const char *DIALOG_STYLE =
     "}"
     "QPushButton#cancelBtn:hover { background-color: rgb(75,85,99); }";
 
+static const char *EDITOR_STYLE =
+    "QLineEdit, QTextEdit, QDoubleSpinBox {"
+    "  background-color: rgb(31,41,55);"
+    "  color: white;"
+    "  selection-background-color: rgba(147,51,234,0.45);"
+    "  selection-color: white;"
+    "  border: 1px solid rgb(55,65,81);"
+    "  border-radius: 6px;"
+    "  padding: 8px;"
+    "}"
+    "QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus {"
+    "  color: white;"
+    "  border-color: rgba(147,51,234,1);"
+    "}";
+
 AddKeyDialog::AddKeyDialog(QWidget *parent)
     : QDialog(parent)
 {
@@ -46,12 +62,10 @@ void AddKeyDialog::setupUI()
     mainLayout->setSpacing(16);
     mainLayout->setContentsMargins(24, 24, 24, 24);
 
-    // Title
     auto *titleLabel = new QLabel(QStringLiteral("新增 Redis 键"), this);
     titleLabel->setStyleSheet("color: white; font-size: 18px; font-weight: bold;");
     mainLayout->addWidget(titleLabel);
 
-    // Key name + type row
     auto *topForm = new QHBoxLayout;
     topForm->setSpacing(12);
 
@@ -60,6 +74,7 @@ void AddKeyDialog::setupUI()
     keyCol->addWidget(keyLabel);
     m_keyEdit = new QLineEdit(this);
     m_keyEdit->setPlaceholderText(QStringLiteral("例如: user:1001"));
+    m_keyEdit->setStyleSheet(EDITOR_STYLE);
     keyCol->addWidget(m_keyEdit);
     topForm->addLayout(keyCol, 3);
 
@@ -75,7 +90,6 @@ void AddKeyDialog::setupUI()
 
     mainLayout->addLayout(topForm);
 
-    // TTL row
     auto *ttlRow = new QHBoxLayout;
     auto *ttlLabel = new QLabel(QStringLiteral("过期时间 (TTL)"), this);
     ttlRow->addWidget(ttlLabel);
@@ -103,70 +117,78 @@ void AddKeyDialog::setupUI()
     ttlRow->addWidget(m_ttlSpin);
     mainLayout->addLayout(ttlRow);
 
-    // Separator
     auto *sep = new QWidget(this);
     sep->setFixedHeight(1);
     sep->setStyleSheet("background-color: rgb(55,65,81);");
     mainLayout->addWidget(sep);
 
-    // Value section (stacked by type)
     auto *valueLabel = new QLabel(QStringLiteral("值"), this);
     valueLabel->setStyleSheet("color: rgb(156,163,175); font-weight: bold;");
     mainLayout->addWidget(valueLabel);
 
     m_valueStack = new QStackedWidget(this);
 
-    // 0: String
     m_stringValueEdit = new QTextEdit(this);
+    m_stringValueEdit->setStyleSheet(EDITOR_STYLE);
     m_stringValueEdit->setPlaceholderText(QStringLiteral("输入字符串值..."));
     m_stringValueEdit->setMaximumHeight(120);
     m_valueStack->addWidget(m_stringValueEdit);
 
-    // 1: Hash
     auto *hashWidget = new QWidget(this);
     auto *hashLayout = new QVBoxLayout(hashWidget);
     hashLayout->setContentsMargins(0, 0, 0, 0);
     auto *fieldLabel = new QLabel(QStringLiteral("Field"), hashWidget);
     fieldLabel->setStyleSheet("color: rgb(156,163,175);");
     hashLayout->addWidget(fieldLabel);
+    auto *hashHint = new QLabel(QStringLiteral("Hash 当前一次只添加 1 组 field/value"), hashWidget);
+    hashHint->setStyleSheet("color: rgb(107,114,128); font-size: 11px;");
+    hashLayout->addWidget(hashHint);
     m_hashFieldEdit = new QLineEdit(hashWidget);
+    m_hashFieldEdit->setStyleSheet(EDITOR_STYLE);
     m_hashFieldEdit->setPlaceholderText(QStringLiteral("例如: name"));
     hashLayout->addWidget(m_hashFieldEdit);
     auto *hvLabel = new QLabel(QStringLiteral("Value"), hashWidget);
     hvLabel->setStyleSheet("color: rgb(156,163,175);");
     hashLayout->addWidget(hvLabel);
     m_hashValueEdit = new QTextEdit(hashWidget);
+    m_hashValueEdit->setStyleSheet(EDITOR_STYLE);
     m_hashValueEdit->setPlaceholderText(QStringLiteral("输入值..."));
     m_hashValueEdit->setMaximumHeight(80);
     hashLayout->addWidget(m_hashValueEdit);
     m_valueStack->addWidget(hashWidget);
 
-    // 2: List
     m_listValueEdit = new QTextEdit(this);
-    m_listValueEdit->setPlaceholderText(QStringLiteral("输入列表元素值..."));
+    m_listValueEdit->setStyleSheet(EDITOR_STYLE);
+    m_listValueEdit->setPlaceholderText(QStringLiteral("输入 List 元素，多个值请用英文逗号分隔，例如: a,b,c"));
+    m_listValueEdit->setToolTip(QStringLiteral("List 多值请使用英文逗号分隔，例如: a,b,c"));
     m_listValueEdit->setMaximumHeight(120);
     m_valueStack->addWidget(m_listValueEdit);
 
-    // 3: Set
     m_setValueEdit = new QTextEdit(this);
-    m_setValueEdit->setPlaceholderText(QStringLiteral("输入集合成员值..."));
+    m_setValueEdit->setStyleSheet(EDITOR_STYLE);
+    m_setValueEdit->setPlaceholderText(QStringLiteral("输入 Set 成员，多个值请用英文逗号分隔，例如: red,green,blue"));
+    m_setValueEdit->setToolTip(QStringLiteral("Set 多值请使用英文逗号分隔，例如: red,green,blue"));
     m_setValueEdit->setMaximumHeight(120);
     m_valueStack->addWidget(m_setValueEdit);
 
-    // 4: ZSet
     auto *zsetWidget = new QWidget(this);
     auto *zsetLayout = new QVBoxLayout(zsetWidget);
     zsetLayout->setContentsMargins(0, 0, 0, 0);
+    auto *zsetHint = new QLabel(QStringLiteral("ZSet 当前一次只添加 1 个 member，分数在 Score 中设置"), zsetWidget);
+    zsetHint->setStyleSheet("color: rgb(107,114,128); font-size: 11px;");
+    zsetLayout->addWidget(zsetHint);
     auto *memberLabel = new QLabel(QStringLiteral("Member"), zsetWidget);
     memberLabel->setStyleSheet("color: rgb(156,163,175);");
     zsetLayout->addWidget(memberLabel);
     m_zsetMemberEdit = new QLineEdit(zsetWidget);
+    m_zsetMemberEdit->setStyleSheet(EDITOR_STYLE);
     m_zsetMemberEdit->setPlaceholderText(QStringLiteral("输入成员名..."));
     zsetLayout->addWidget(m_zsetMemberEdit);
     auto *scoreLabel = new QLabel(QStringLiteral("Score"), zsetWidget);
     scoreLabel->setStyleSheet("color: rgb(156,163,175);");
     zsetLayout->addWidget(scoreLabel);
     m_zsetScoreSpin = new QDoubleSpinBox(zsetWidget);
+    m_zsetScoreSpin->setStyleSheet(EDITOR_STYLE);
     m_zsetScoreSpin->setRange(-999999999, 999999999);
     m_zsetScoreSpin->setDecimals(4);
     m_zsetScoreSpin->setValue(0);
@@ -176,7 +198,6 @@ void AddKeyDialog::setupUI()
 
     mainLayout->addWidget(m_valueStack, 1);
 
-    // Buttons
     mainLayout->addStretch();
     auto *btnLayout = new QHBoxLayout;
     btnLayout->addStretch();
@@ -209,19 +230,52 @@ void AddKeyDialog::onAccept()
     accept();
 }
 
-QString AddKeyDialog::keyName() const { return m_keyEdit->text().trimmed(); }
+QString AddKeyDialog::keyName() const
+{
+    return m_keyEdit->text().trimmed();
+}
 
 QString AddKeyDialog::keyType() const
 {
     return m_typeCombo->currentText().toLower();
 }
 
-int AddKeyDialog::ttlSeconds() const { return m_ttlSpin->value(); }
+int AddKeyDialog::ttlSeconds() const
+{
+    return m_ttlSpin->value();
+}
 
-QString AddKeyDialog::stringValue() const { return m_stringValueEdit->toPlainText(); }
-QString AddKeyDialog::hashField() const { return m_hashFieldEdit->text().trimmed(); }
-QString AddKeyDialog::hashValue() const { return m_hashValueEdit->toPlainText(); }
-QString AddKeyDialog::listValue() const { return m_listValueEdit->toPlainText(); }
-QString AddKeyDialog::setValue() const { return m_setValueEdit->toPlainText(); }
-QString AddKeyDialog::zsetMember() const { return m_zsetMemberEdit->text().trimmed(); }
-double AddKeyDialog::zsetScore() const { return m_zsetScoreSpin->value(); }
+QString AddKeyDialog::stringValue() const
+{
+    return m_stringValueEdit->toPlainText();
+}
+
+QString AddKeyDialog::hashField() const
+{
+    return m_hashFieldEdit->text().trimmed();
+}
+
+QString AddKeyDialog::hashValue() const
+{
+    return m_hashValueEdit->toPlainText();
+}
+
+QString AddKeyDialog::listValue() const
+{
+    return m_listValueEdit->toPlainText();
+}
+
+QString AddKeyDialog::setValue() const
+{
+    return m_setValueEdit->toPlainText();
+}
+
+QString AddKeyDialog::zsetMember() const
+{
+    return m_zsetMemberEdit->text().trimmed();
+}
+
+double AddKeyDialog::zsetScore() const
+{
+    return m_zsetScoreSpin->value();
+}

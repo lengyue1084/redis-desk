@@ -8,6 +8,7 @@
 #include <QMap>
 #include <QShowEvent>
 #include <QHideEvent>
+#include <functional>
 #include "redis/redisclient.h"
 
 class DataSummaryPage : public QWidget
@@ -28,6 +29,7 @@ private:
     void setupUI();
     void refresh();
     void parseInfo(const QString &infoStr);
+    void countKeysByType(const RedisClient *requestClient, quint64 requestId);
     QWidget *createStatCard(const QString &title, const QString &objectName,
                             const QString &iconText, QWidget *parent);
 
@@ -59,6 +61,7 @@ private:
 
     QPushButton *m_refreshBtn;
     QMap<QString, QString> m_infoMap;
+    quint64 m_typeStatsRequestId = 0;
 };
 
 #endif // DATASUMMARYPAGE_H

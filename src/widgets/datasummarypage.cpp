@@ -7,6 +7,7 @@
 #include <QGroupBox>
 #include <QScrollArea>
 #include <QPushButton>
+#include <memory>
 
 DataSummaryPage::DataSummaryPage(QWidget *parent)
     : QWidget(parent)
@@ -22,6 +23,7 @@ DataSummaryPage::~DataSummaryPage() {}
 void DataSummaryPage::setClient(RedisClient *client)
 {
     m_client = client;
+    ++m_typeStatsRequestId;
     if (m_client && isVisible()) {
         refresh();
         m_refreshTimer->start();
@@ -33,6 +35,7 @@ void DataSummaryPage::setClient(RedisClient *client)
 void DataSummaryPage::clearAll()
 {
     m_client = nullptr;
+    ++m_typeStatsRequestId;
     m_refreshTimer->stop();
     m_totalKeysValue->setText("--");
     m_totalKeysDetail->clear();
@@ -225,6 +228,9 @@ void DataSummaryPage::refresh()
 {
     CommonHelper::spinRefreshIcon(m_refreshBtn);
     if (!m_client) return;
+    ++m_typeStatsRequestId;
+    const quint64 requestId = m_typeStatsRequestId;
+    const RedisClient *requestClient = m_client;
 
     // Get INFO all
     m_client->info(QString(), [this](const QVariant &res, const QString &err) {
@@ -259,21 +265,8 @@ void DataSummaryPage::refresh()
         m_opsLabel->setText(m_infoMap.value("instantaneous_ops_per_sec", "--"));
     });
 
-    // Key type scan (sample)
-    auto scanType = [this](const QString &type, QLabel *label) {
-        m_client->scan(0, "*", 10000, type,
-                       [label](const QVariant &res, const QString &err) {
-            if (!err.isEmpty()) return;
-            QVariantList arr = res.toList();
-            if (arr.size() >= 2)
-                label->setText(QString::number(arr[1].toList().size()));
-        });
-    };
-    scanType(QStringLiteral("string"), m_stringCount);
-    scanType(QStringLiteral("hash"), m_hashCount);
-    scanType(QStringLiteral("list"), m_listCount);
-    scanType(QStringLiteral("set"), m_setCount);
-    scanType(QStringLiteral("zset"), m_zsetCount);
+    // Key type distribution for the currently selected DB
+    countKeysByType(requestClient, requestId);
 }
 
 void DataSummaryPage::parseInfo(const QString &infoStr)
@@ -289,4 +282,100 @@ void DataSummaryPage::parseInfo(const QString &infoStr)
             m_infoMap.insert(trimmed.left(idx), trimmed.mid(idx + 1));
         }
     }
+}
+
+void DataSummaryPage::countKeysByType(const RedisClient *requestClient, quint64 requestId)
+{
+    if (!m_client || m_client != requestClient || m_typeStatsRequestId != requestId)
+        return;
+
+    auto cursor = std::make_shared<qlonglong>(0);
+    auto stepScan = std::make_shared<std::function<void()>>();
+
+    *stepScan = [this, requestClient, requestId, cursor, stepScan]() {
+        if (!m_client || m_client != requestClient || m_typeStatsRequestId != requestId)
+            return;
+
+        m_client->scan(*cursor, QStringLiteral("*"), 1000, QString(),
+                       [this, requestClient, requestId, cursor, stepScan](const QVariant &res, const QString &err) {
+            if (!m_client || m_client != requestClient || m_typeStatsRequestId != requestId)
+                return;
+            if (!err.isEmpty()) {
+                m_stringCount->setText(QStringLiteral("0"));
+                m_hashCount->setText(QStringLiteral("0"));
+                m_listCount->setText(QStringLiteral("0"));
+                m_setCount->setText(QStringLiteral("0"));
+                m_zsetCount->setText(QStringLiteral("0"));
+                return;
+            }
+
+            const QVariantList arr = res.toList();
+            if (arr.size() < 2)
+                return;
+
+            *cursor = arr[0].toLongLong();
+            const QVariantList keys = arr[1].toList();
+
+            auto stringCount = std::make_shared<qlonglong>(0);
+            auto hashCount = std::make_shared<qlonglong>(0);
+            auto listCount = std::make_shared<qlonglong>(0);
+            auto setCount = std::make_shared<qlonglong>(0);
+            auto zsetCount = std::make_shared<qlonglong>(0);
+            auto nextIndex = std::make_shared<int>(0);
+            auto stepType = std::make_shared<std::function<void()>>();
+
+            *stepType = [this, requestClient, requestId, keys, cursor,
+                         stringCount, hashCount, listCount, setCount, zsetCount,
+                         nextIndex, stepType, stepScan]() {
+                if (!m_client || m_client != requestClient || m_typeStatsRequestId != requestId)
+                    return;
+
+                if (*nextIndex >= keys.size()) {
+                    m_stringCount->setText(QString::number(*stringCount + m_stringCount->text().toLongLong()));
+                    m_hashCount->setText(QString::number(*hashCount + m_hashCount->text().toLongLong()));
+                    m_listCount->setText(QString::number(*listCount + m_listCount->text().toLongLong()));
+                    m_setCount->setText(QString::number(*setCount + m_setCount->text().toLongLong()));
+                    m_zsetCount->setText(QString::number(*zsetCount + m_zsetCount->text().toLongLong()));
+
+                    if (*cursor == 0)
+                        return;
+                    (*stepScan)();
+                    return;
+                }
+
+                const QString key = keys.at((*nextIndex)++).toString();
+                m_client->type(key, [this, requestClient, requestId,
+                                     stringCount, hashCount, listCount, setCount, zsetCount,
+                                     stepType](const QVariant &typeRes, const QString &typeErr) {
+                    if (!m_client || m_client != requestClient || m_typeStatsRequestId != requestId)
+                        return;
+
+                    if (typeErr.isEmpty()) {
+                        const QString keyType = typeRes.toString();
+                        if (keyType == QStringLiteral("string"))
+                            ++(*stringCount);
+                        else if (keyType == QStringLiteral("hash"))
+                            ++(*hashCount);
+                        else if (keyType == QStringLiteral("list"))
+                            ++(*listCount);
+                        else if (keyType == QStringLiteral("set"))
+                            ++(*setCount);
+                        else if (keyType == QStringLiteral("zset"))
+                            ++(*zsetCount);
+                    }
+
+                    (*stepType)();
+                });
+            };
+
+            (*stepType)();
+        });
+    };
+
+    m_stringCount->setText(QStringLiteral("0"));
+    m_hashCount->setText(QStringLiteral("0"));
+    m_listCount->setText(QStringLiteral("0"));
+    m_setCount->setText(QStringLiteral("0"));
+    m_zsetCount->setText(QStringLiteral("0"));
+    (*stepScan)();
 }

@@ -60,6 +60,8 @@ void KeyManagerPage::clearAll()
     m_detailTtlLabel->clear();
     m_currentKey.clear();
     m_allKeys.clear();
+    m_activeSearchPattern.clear();
+    m_activeTypeFilter.clear();
     m_scanCursor = 0;
     m_isJsonValue = false;
     m_jsonSaveCompact = false;
@@ -509,6 +511,12 @@ void KeyManagerPage::onSearch()
 void KeyManagerPage::onLoadMore()
 {
     if (!m_client || m_scanCursor == 0) return;
+    const QString currentPattern = currentSearchPattern();
+    const QString currentType = currentTypeFilter();
+    if (currentPattern != m_activeSearchPattern || currentType != m_activeTypeFilter) {
+        loadKeys(true);
+        return;
+    }
     m_loadMoreBtn->setEnabled(false);
     m_loadMoreBtn->setText(QStringLiteral("鍔犺浇涓?.."));
     loadKeys(false);
@@ -521,6 +529,8 @@ void KeyManagerPage::onLoadAll()
     ++m_keyListRequestId;
     m_scanCursor = 0;
     m_allKeys.clear();
+    m_activeSearchPattern = currentSearchPattern();
+    m_activeTypeFilter = currentTypeFilter();
 
     m_loadMoreBtn->setEnabled(false);
     m_loadAllBtn->setEnabled(false);
@@ -945,12 +955,14 @@ void KeyManagerPage::loadKeys(bool reset)
         ++m_keyListRequestId;
         m_scanCursor = 0;
         m_allKeys.clear();
+        m_activeSearchPattern = currentSearchPattern();
+        m_activeTypeFilter = currentTypeFilter();
     }
 
     const RedisClient *requestClient = m_client;
     const quint64 requestId = m_keyListRequestId;
-    const QString pattern = currentSearchPattern();
-    const QString type = currentTypeFilter();
+    const QString pattern = m_activeSearchPattern;
+    const QString type = m_activeTypeFilter;
     const int scanCount = type.isEmpty() ? 200 : 1000;
 
     m_client->scan(m_scanCursor, pattern, scanCount, QString(),

@@ -1,11 +1,13 @@
 #include "widgets/connectionpanel.h"
-#include "dialogs/connectiondialog.h"
-#include "utils/dpitools.h"
-#include "utils/commonhelper.h"
+
 #include <QLabel>
-#include <QVBoxLayout>
 #include <QMenu>
 #include <QMessageBox>
+#include <QVBoxLayout>
+
+#include "dialogs/connectiondialog.h"
+#include "utils/commonhelper.h"
+#include "utils/dpitools.h"
 
 ConnectionPanel::ConnectionPanel(QWidget *parent)
     : QWidget(parent)
@@ -15,7 +17,7 @@ ConnectionPanel::ConnectionPanel(QWidget *parent)
     , m_proxyModel(new QSortFilterProxyModel(this))
     , m_currentClient(nullptr)
 {
-    this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     setupUI();
     loadConnections();
 }
@@ -29,8 +31,9 @@ bool ConnectionPanel::isConnected() const
 
 void ConnectionPanel::setupUI()
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
+
     m_connectListView = new QListView(this);
     layout->addWidget(m_connectListView);
     m_connectListView->setObjectName("connectListView");
@@ -55,13 +58,14 @@ void ConnectionPanel::setupUI()
             "QMenu::item:selected { background-color: rgba(147,51,234,1); }");
 
         if (index.isValid()) {
-            QString connId = index.data(Qt::UserRole + 10).toString();
+            const QString connId = index.data(Qt::UserRole + 10).toString();
             menu.addAction(QStringLiteral("连接"), this, [this, index]() {
                 onItemDoubleClicked(index);
             });
             menu.addAction(QStringLiteral("编辑"), this, [this, connId]() {
                 ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
-                if (cfg.id.isEmpty()) return;
+                if (cfg.id.isEmpty())
+                    return;
                 ConnectionDialog dlg(cfg, this);
                 if (dlg.exec() == QDialog::Accepted) {
                     ConnectionConfigManager::instance().updateConnection(dlg.connectionConfig());
@@ -71,7 +75,7 @@ void ConnectionPanel::setupUI()
             menu.addSeparator();
             menu.addAction(QStringLiteral("删除"), this, [this, connId]() {
                 if (CommonHelper::confirm(this, QStringLiteral("确认"),
-                        QStringLiteral("确定要删除此连接吗？"))) {
+                                          QStringLiteral("确定要删除此连接吗？"))) {
                     if (connId == m_currentConnectionId)
                         disconnectCurrent();
                     ConnectionConfigManager::instance().removeConnection(connId);
@@ -88,35 +92,31 @@ void ConnectionPanel::setupUI()
 void ConnectionPanel::loadConnections()
 {
     m_listModel->clear();
-    auto conns = ConnectionConfigManager::instance().connections();
+    const auto conns = ConnectionConfigManager::instance().connections();
     for (const ConnectionConfig &c : conns) {
         auto *item = new QStandardItem();
         item->setText(c.name);
-        QString tooltip = QString("名称: %1\n地址: %2:%3\n数据库: %4")
-                              .arg(c.name, c.host).arg(c.port).arg(c.database);
-        item->setToolTip(tooltip);
+        item->setToolTip(QStringLiteral("名称: %1\n地址: %2:%3").arg(c.name, c.host).arg(c.port));
         item->setData(c.name, Qt::DisplayRole);
-        item->setData(QString("%1:%2").arg(c.host).arg(c.port), Qt::UserRole + 1);
+        item->setData(QStringLiteral("%1:%2").arg(c.host).arg(c.port), Qt::UserRole + 1);
         item->setData(c.database, Qt::UserRole + 2);
         item->setData(c.id, Qt::UserRole + 10);
 
-        bool isActive = (c.id == m_currentConnectionId && isConnected());
+        const bool isActive = (c.id == m_currentConnectionId && isConnected());
         item->setData(isActive, Qt::UserRole + 11);
-
-        QIcon icon(":/images/icons/icon-client.png");
-        item->setIcon(icon);
+        item->setIcon(QIcon(QStringLiteral(":/images/icons/icon-client.png")));
         m_listModel->appendRow(item);
     }
 
-    int rowCount = m_proxyModel->rowCount();
+    const int rowCount = m_proxyModel->rowCount();
     if (rowCount == 0) {
         setFixedHeight(40);
     } else {
         QStyleOptionViewItem opt;
         opt.widget = m_connectListView;
-        int rowH = m_connectionPanelDelegrate->sizeHint(opt, m_proxyModel->index(0, 0)).height();
-        int totalH = rowCount * rowH + 4;
-        int maxH = DpiTools::scaleValue(this, 200);
+        const int rowH = m_connectionPanelDelegrate->sizeHint(opt, m_proxyModel->index(0, 0)).height();
+        const int totalH = rowCount * rowH + 4;
+        const int maxH = DpiTools::scaleValue(this, 200);
         setFixedHeight(qMin(totalH, maxH));
     }
 }
@@ -137,16 +137,18 @@ void ConnectionPanel::addNewConnection()
 
 void ConnectionPanel::onItemDoubleClicked(const QModelIndex &index)
 {
-    QString connId = index.data(Qt::UserRole + 10).toString();
-    if (connId.isEmpty()) return;
+    const QString connId = index.data(Qt::UserRole + 10).toString();
+    if (connId.isEmpty())
+        return;
 
     if (connId == m_currentConnectionId && isConnected())
         return;
 
     disconnectCurrent();
 
-    ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
-    if (cfg.id.isEmpty()) return;
+    const ConnectionConfig cfg = ConnectionConfigManager::instance().findById(connId);
+    if (cfg.id.isEmpty())
+        return;
 
     connectToConfig(cfg);
 }
@@ -170,14 +172,14 @@ void ConnectionPanel::connectToConfig(const ConnectionConfig &config)
         loadConnections();
     });
 
-    m_currentClient->connectToServer(config.host, config.port,
-                                     config.password, config.database);
+    m_currentClient->connectToServer(config.host, config.port, config.password, config.database);
 }
 
 void ConnectionPanel::autoConnectFirst()
 {
-    auto conns = ConnectionConfigManager::instance().connections();
-    if (conns.isEmpty()) return;
+    const auto conns = ConnectionConfigManager::instance().connections();
+    if (conns.isEmpty())
+        return;
     connectToConfig(conns.first());
 }
 

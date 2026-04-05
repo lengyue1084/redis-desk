@@ -120,6 +120,8 @@ private:
     qlonglong m_scanCursor = 0;
     QString m_currentKey;
     QStringList m_allKeys;
+    QString m_activeSearchPattern;
+    QString m_activeTypeFilter;
     quint64 m_keyListRequestId = 0;
     quint64 m_keyDetailRequestId = 0;
 };
