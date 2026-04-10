@@ -1,10 +1,11 @@
 #include "dialogs/connectiondialog.h"
 #include "redis/redisclient.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
 #include <QFormLayout>
+#include <QHBoxLayout>
 #include <QMessageBox>
 #include <QTimer>
+#include <QVBoxLayout>
 
 ConnectionDialog::ConnectionDialog(QWidget *parent)
     : QDialog(parent)
@@ -59,6 +60,10 @@ void ConnectionDialog::setupUI()
     m_portSpin->setValue(6379);
     formLayout->addRow(QStringLiteral("端口"), m_portSpin);
 
+    m_usernameEdit = new QLineEdit(this);
+    m_usernameEdit->setPlaceholderText(QStringLiteral("可选"));
+    formLayout->addRow(QStringLiteral("用户名"), m_usernameEdit);
+
     m_passwordEdit = new QLineEdit(this);
     m_passwordEdit->setEchoMode(QLineEdit::Password);
     m_passwordEdit->setPlaceholderText(QStringLiteral("可选"));
@@ -101,6 +106,7 @@ void ConnectionDialog::populate(const ConnectionConfig &config)
     m_nameEdit->setText(config.name);
     m_hostEdit->setText(config.host);
     m_portSpin->setValue(config.port);
+    m_usernameEdit->setText(config.username);
     m_passwordEdit->setText(config.password);
     m_dbSpin->setValue(config.database);
 }
@@ -114,6 +120,7 @@ ConnectionConfig ConnectionDialog::connectionConfig() const
         c.name = QString("%1:%2").arg(m_hostEdit->text()).arg(m_portSpin->value());
     c.host = m_hostEdit->text().trimmed();
     c.port = m_portSpin->value();
+    c.username = m_usernameEdit->text().trimmed();
     c.password = m_passwordEdit->text();
     c.database = m_dbSpin->value();
     return c;
@@ -126,7 +133,7 @@ void ConnectionDialog::onTestConnection()
     m_testBtn->setEnabled(false);
 
     auto *client = new RedisClient(this);
-    auto config = connectionConfig();
+    const auto config = connectionConfig();
 
     QTimer::singleShot(5000, client, [client, this]() {
         if (client->state() != RedisClient::Connected) {
@@ -158,7 +165,7 @@ void ConnectionDialog::onTestConnection()
         client->deleteLater();
     });
 
-    client->connectToServer(config.host, config.port, config.password, config.database);
+    client->connectToServer(config.host, config.port, config.username, config.password, config.database);
 }
 
 void ConnectionDialog::onAccept()

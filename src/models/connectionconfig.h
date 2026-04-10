@@ -12,6 +12,7 @@ struct ConnectionConfig {
     QString name;
     QString host = QStringLiteral("127.0.0.1");
     int port = 6379;
+    QString username;
     QString password;
     int database = 0;
 
@@ -21,6 +22,7 @@ struct ConnectionConfig {
         obj[QStringLiteral("name")] = name;
         obj[QStringLiteral("host")] = host;
         obj[QStringLiteral("port")] = port;
+        obj[QStringLiteral("username")] = username;
         obj[QStringLiteral("password")] = password;
         obj[QStringLiteral("database")] = database;
         return obj;
@@ -32,6 +34,7 @@ struct ConnectionConfig {
         c.name = obj.value(QStringLiteral("name")).toString();
         c.host = obj.value(QStringLiteral("host")).toString(QStringLiteral("127.0.0.1"));
         c.port = obj.value(QStringLiteral("port")).toInt(6379);
+        c.username = obj.value(QStringLiteral("username")).toString();
         c.password = obj.value(QStringLiteral("password")).toString();
         c.database = obj.value(QStringLiteral("database")).toInt(0);
         return c;

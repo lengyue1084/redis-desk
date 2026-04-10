@@ -20,6 +20,7 @@ public:
     ~RedisClient();
 
     void connectToServer(const QString &host, int port,
+                         const QString &username = QString(),
                          const QString &password = QString(), int db = 0);
     void disconnectFromServer();
     bool isConnected() const;
@@ -101,6 +102,7 @@ private:
     ConnectionState m_state;
     QString m_host;
     int m_port;
+    QString m_username;
     QString m_password;
     int m_database;
     QByteArray m_buffer;

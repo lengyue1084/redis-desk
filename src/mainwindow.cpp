@@ -515,6 +515,7 @@ void MainWindow::onExportConnections()
         obj[QStringLiteral("name")] = c.name;
         obj[QStringLiteral("host")] = c.host;
         obj[QStringLiteral("port")] = c.port;
+        obj[QStringLiteral("username")] = c.username;
         obj[QStringLiteral("password")] = c.password;
         obj[QStringLiteral("database")] = c.database;
         arr.append(obj);

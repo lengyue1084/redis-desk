@@ -6,8 +6,8 @@ RedisDesk is a desktop Redis management tool built with Qt Widgets. It is design
 
 ## Release Downloads
 
-- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.1.0
-- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.1.0
+- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.1
+- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.1
 
 ## Features
 
@@ -99,7 +99,7 @@ cmake --build out/build/release --config Release
 ## Current Limitations
 
 - The Redis communication layer is a lightweight in-project RESP implementation rather than a full external SDK
-- Authentication currently supports password-based `AUTH` only, without username ACL support
+- Authentication supports both password-based `AUTH` and ACL username/password authentication
 - The current implementation focuses on common core data types and does not include `stream`
 - The monitoring page polls `INFO` data and does not use streaming from the Redis `MONITOR` command
 

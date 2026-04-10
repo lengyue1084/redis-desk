@@ -29,6 +29,7 @@ RedisClient::~RedisClient()
 }
 
 void RedisClient::connectToServer(const QString &host, int port,
+                                  const QString &username,
                                   const QString &password, int db)
 {
     if (m_state != Disconnected) {
@@ -36,6 +37,7 @@ void RedisClient::connectToServer(const QString &host, int port,
     }
     m_host = host;
     m_port = port;
+    m_username = username;
     m_password = password;
     m_database = db;
     m_buffer.clear();
@@ -81,8 +83,15 @@ void RedisClient::onSocketConnected()
 {
     setState(Authenticating);
 
-    if (!m_password.isEmpty()) {
-        sendRawCommand({QStringLiteral("AUTH"), m_password}, [this](const QVariant &, const QString &err) {
+    if (!m_username.isEmpty() || !m_password.isEmpty()) {
+        QStringList authCommand = {QStringLiteral("AUTH")};
+        if (!m_username.isEmpty()) {
+            authCommand << m_username << m_password;
+        } else {
+            authCommand << m_password;
+        }
+
+        sendRawCommand(authCommand, [this](const QVariant &, const QString &err) {
             if (!err.isEmpty()) {
                 emit errorOccurred(QStringLiteral("AUTH failed: %1").arg(err));
                 disconnectFromServer();

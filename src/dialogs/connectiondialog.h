@@ -28,6 +28,7 @@ private:
     QLineEdit *m_nameEdit;
     QLineEdit *m_hostEdit;
     QSpinBox *m_portSpin;
+    QLineEdit *m_usernameEdit;
     QLineEdit *m_passwordEdit;
     QSpinBox *m_dbSpin;
     QPushButton *m_testBtn;

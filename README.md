@@ -6,8 +6,8 @@ RedisDesk 是一个基于 Qt Widgets 的桌面端 Redis 管理工具，面向日
 
 ## Release 下载
 
-- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.1.0
-- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.1.0
+- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.1
+- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.1
 
 ## 功能特性
 
@@ -99,7 +99,7 @@ cmake --build out/build/release --config Release
 ## 当前限制
 
 - 当前 Redis 通信层是项目内置的轻量 RESP 实现，并非完整第三方 SDK
-- 当前认证仅支持密码形式的 `AUTH`，暂未支持 ACL 用户名
+- 当前认证支持密码形式的 `AUTH`，也支持 ACL 用户名 + 密码认证
 - 当前主要覆盖常见基础数据类型，不包含 `stream`
 - 当前监控页面基于 `INFO` 轮询，不是 Redis `MONITOR` 命令的流式监听
 

@@ -186,7 +186,7 @@ void ConnectionPanel::connectToConfig(const ConnectionConfig &config)
         loadConnections();
     });
 
-    m_currentClient->connectToServer(config.host, config.port, config.password, config.database);
+    m_currentClient->connectToServer(config.host, config.port, config.username, config.password, config.database);
 }
 
 void ConnectionPanel::autoConnectFirst()
