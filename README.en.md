@@ -6,8 +6,8 @@ RedisDesk is a desktop Redis management tool built with Qt Widgets. It is design
 
 ## Release Downloads
 
-- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.1
-- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.1
+- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.2
+- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.2
 
 ## Features
 
@@ -20,12 +20,17 @@ RedisDesk is a desktop Redis management tool built with Qt Widgets. It is design
 - Data overview: show total keys, memory usage, connected clients, Redis version, uptime, instance role, and key type distribution
 - Performance monitoring: show CPU, command throughput, hit rate, network I/O, memory metrics, and recent samples
 - Configuration management: read settings with `CONFIG GET *` and update values with `CONFIG SET`
+- Built-in CLI: open a Redis command line directly from the active connection context menu
 
 ## Screenshots
 
 ### Key Manager
 
 ![Key Manager](docs/images/key-manager.png)
+
+### CLI
+
+![CLI](docs/images/cli.png)
 
 ### Data Summary
 

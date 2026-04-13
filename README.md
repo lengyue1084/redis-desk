@@ -2,12 +2,12 @@
 
 [English](README.en.md)
 
-RedisDesk 是一个基于 Qt Widgets 的桌面端 Redis 管理工具，面向日常开发、调试和运维场景，提供连接管理、键值浏览、数据编辑、数据概览、性能监控和配置管理等能力。
+RedisDesk 是一个基于 Qt Widgets 的桌面端 Redis 管理工具，面向日常开发、调试和运维场景，提供连接管理、键值浏览、数据编辑、数据概览、性能监控、配置管理和内置命令行等能力。
 
 ## Release 下载
 
-- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.1
-- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.1
+- GitHub Release: https://github.com/lengyue1084/redis-desk/releases/tag/v0.2.2
+- Gitee Release: https://gitee.com/xiaopangda/redis-desk/releases/tag/v0.2.2
 
 ## 功能特性
 
@@ -16,16 +16,21 @@ RedisDesk 是一个基于 Qt Widgets 的桌面端 Redis 管理工具，面向日
 - 键值管理：基于 `SCAN` 增量加载 Key，支持分页、加载全部、通配搜索和类型筛选
 - 命名空间展示：按 `:` 层级树形展示 Key
 - 数据编辑：支持查看和编辑 `string`、`hash`、`list`、`set`、`zset`
-- Key 操作：支持新增 Key、删除 Key、修改 TTL、切换 `db 0` 到 `db 15`
+- Key 操作：支持新建 Key、删除 Key、修改 TTL、切换 `db 0` 到 `db 15`
 - 数据概览：展示 Key 总数、内存使用、客户端连接数、Redis 版本、运行时长、实例角色和 Key 类型分布
 - 性能监控：展示 CPU、命令处理速率、命中率、网络 I/O、内存指标和最近采样记录
 - 配置管理：支持基于 `CONFIG GET *` 查询配置，并通过 `CONFIG SET` 修改配置值
+- 内置 CLI：可从当前连接的右键菜单直接打开 Redis 命令行
 
 ## 界面预览
 
 ### 键值管理
 
 ![键值管理](docs/images/key-manager.png)
+
+### CLI
+
+![CLI](docs/images/cli.png)
 
 ### 数据概览
 
@@ -90,7 +95,6 @@ cmake --build out/build/release --config Release
 |   |-- resources/
 |   |-- utils/
 |   `-- widgets/
-|-- html/
 |-- CMakeLists.txt
 |-- CMakePresets.json
 `-- README.en.md
@@ -99,7 +103,7 @@ cmake --build out/build/release --config Release
 ## 当前限制
 
 - 当前 Redis 通信层是项目内置的轻量 RESP 实现，并非完整第三方 SDK
-- 当前认证支持密码形式的 `AUTH`，也支持 ACL 用户名 + 密码认证
+- 当前认证支持密码形式的 `AUTH`，也支持 ACL 用户名加密码认证
 - 当前主要覆盖常见基础数据类型，不包含 `stream`
 - 当前监控页面基于 `INFO` 轮询，不是 Redis `MONITOR` 命令的流式监听
 
