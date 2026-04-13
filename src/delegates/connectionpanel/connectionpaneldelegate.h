@@ -24,6 +24,9 @@ protected:
 public:
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const override;
+
+private:
+    void drawConnectingIndicator(QPainter *painter, const QRect &rect) const;
 };
 
 #endif // CONNECTIONPANELDELEGATE_H

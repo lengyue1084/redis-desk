@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QWidget>
 #include <QLabel>
+#include <QVBoxLayout>
 #include <QMouseEvent>
 #include <QStackedWidget>
 #include <QSplitter>
@@ -74,8 +75,10 @@ private slots:
     void onMaximizeClicked();
     void onCloseClicked();
     void changeRightContentWidget(int menuIndex);
+    void onConnectionStarted(const QString &connectionName);
     void onConnectionEstablished(RedisClient *client);
     void onConnectionLost();
+    void onConnectionError(const QString &error);
     void onImportConnections();
     void onExportConnections();
     void toggleSidebar();

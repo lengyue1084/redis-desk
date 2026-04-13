@@ -1,52 +1,68 @@
 #include "mainwindow.h"
+
 #include <QApplication>
-#include <QScreen>
 #include <QFile>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGraphicsDropShadowEffect>
-#include <QSplitter>
-#include <QLabel>
 #include <QFileDialog>
-#include <QMessageBox>
-#include <QJsonDocument>
+#include <QGraphicsDropShadowEffect>
+#include <QHBoxLayout>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QLabel>
+#include <QMessageBox>
+#include <QScreen>
+#include <QSplitter>
+#include <QTextStream>
+#include <QVBoxLayout>
+
 #include "constants/constants.h"
 #include "constants/enums.h"
+#include "dialogs/settingsdialog.h"
 #include "utils/dpitools.h"
 #include "widgets/righttopwidget.h"
-#include "dialogs/settingsdialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , m_isMaximized(false)
     , m_leftContentWidget(nullptr)
+    , m_connectionPanel(new ConnectionPanel(this))
     , m_rightContentWidget(nullptr)
+    , m_rightStackedWidget(nullptr)
+    , m_keyManagerPage(nullptr)
+    , m_dataSummaryPage(nullptr)
+    , m_monitorMenuPage(nullptr)
+    , m_configMenuPage(nullptr)
+    , m_commandLinePage(nullptr)
+    , m_isMaximized(false)
     , m_normalGeometry(QRect())
     , m_dragPosition(QPoint())
-    , m_connectionPanel(new ConnectionPanel(this))
     , m_leftMenuPanel(new LeftMenuPanel(this))
     , m_rightTopWidget(new RightTopWidget(this))
+    , m_connectNewBtn(nullptr)
+    , m_settingBtn(nullptr)
     , m_statusLabel(nullptr)
     , m_mainSplitter(nullptr)
+    , m_sidebarCollapsed(false)
     , m_collapseBtn(nullptr)
     , m_sidebarAnim(nullptr)
     , m_titleLabel(nullptr)
     , m_clientPanelWidget(nullptr)
-    , m_commandLinePage(nullptr)
+    , m_leftContentLayout(nullptr)
+    , m_connectWidget(nullptr)
+    , m_collapsedToolWidget(nullptr)
     , m_expandedWidth(0)
 {
     setObjectName("techBackground");
     setWindowTitle(QStringLiteral("RedisDesk"));
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
 
-    QScreen *screen = QApplication::primaryScreen();
-    QRect screenGeometry = screen->geometry();
-    int x = (screenGeometry.width() - Constants::WINDOW_WIDTH) / 2;
-    int y = (screenGeometry.height() - Constants::WINDOW_HEIGHT) / 2;
-    setGeometry(x, y, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT);
+    if (QScreen *screen = QApplication::primaryScreen()) {
+        const QRect screenGeometry = screen->geometry();
+        const int x = (screenGeometry.width() - Constants::WINDOW_WIDTH) / 2;
+        const int y = (screenGeometry.height() - Constants::WINDOW_HEIGHT) / 2;
+        setGeometry(x, y, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT);
+    }
 
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
+    auto *shadow = new QGraphicsDropShadowEffect(this);
     shadow->setBlurRadius(10);
     shadow->setColor(Qt::black);
     shadow->setOffset(0, 5);
@@ -58,24 +74,33 @@ MainWindow::MainWindow(QWidget *parent)
     QMetaObject::connectSlotsByName(this);
     connect(m_leftMenuPanel, &LeftMenuPanel::menuClicked,
             this, &MainWindow::changeRightContentWidget);
-
+    connect(m_connectionPanel, &ConnectionPanel::connectionStarted,
+            this, &MainWindow::onConnectionStarted);
     connect(m_connectionPanel, &ConnectionPanel::connectionEstablished,
             this, &MainWindow::onConnectionEstablished);
     connect(m_connectionPanel, &ConnectionPanel::connectionLost,
             this, &MainWindow::onConnectionLost);
     connect(m_connectionPanel, &ConnectionPanel::connectionError,
-            this, [this](const QString &err) {
-        if (m_statusLabel)
-            m_statusLabel->setText(QStringLiteral("连接错误: %1").arg(err));
-    });
+            this, &MainWindow::onConnectionError);
     connect(m_connectionPanel, &ConnectionPanel::openCommandLine,
             this, &MainWindow::onOpenCommandLine);
+
+    if (m_statusLabel) {
+        const bool hasConnections = !ConnectionConfigManager::instance().connections().isEmpty();
+        m_statusLabel->setText(hasConnections ? QStringLiteral("未连接") : QStringLiteral("暂无连接配置"));
+    }
 
     QMetaObject::invokeMethod(m_connectionPanel, &ConnectionPanel::autoConnectFirst,
                               Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow() {}
+
+void MainWindow::onConnectionStarted(const QString &connectionName)
+{
+    if (m_statusLabel)
+        m_statusLabel->setText(QStringLiteral("正在连接: %1").arg(connectionName));
+}
 
 void MainWindow::onConnectionEstablished(RedisClient *client)
 {
@@ -84,6 +109,7 @@ void MainWindow::onConnectionEstablished(RedisClient *client)
     m_monitorMenuPage->setClient(client);
     m_configMenuPage->setClient(client);
     m_commandLinePage->setClient(client);
+
     if (m_statusLabel)
         m_statusLabel->setText(QStringLiteral("已连接"));
 }
@@ -95,20 +121,28 @@ void MainWindow::onConnectionLost()
     m_monitorMenuPage->clearAll();
     m_configMenuPage->clearAll();
     m_commandLinePage->clearAll();
-    if (m_statusLabel)
+
+    if (m_statusLabel && !m_statusLabel->text().startsWith(QStringLiteral("连接失败")))
         m_statusLabel->setText(QStringLiteral("未连接"));
+}
+
+void MainWindow::onConnectionError(const QString &error)
+{
+    if (m_statusLabel)
+        m_statusLabel->setText(QStringLiteral("连接失败: %1").arg(error));
 }
 
 void MainWindow::changeRightContentWidget(int menuIndex)
 {
-    m_rightStackedWidget->setCurrentIndex(menuIndex);
+    if (m_rightStackedWidget)
+        m_rightStackedWidget->setCurrentIndex(menuIndex);
 }
 
 void MainWindow::onOpenCommandLine()
 {
-    const int idx = static_cast<int>(Menu::LeftMenu::CommandLine);
-    m_leftMenuPanel->simulateClick(idx);
-    m_rightStackedWidget->setCurrentIndex(idx);
+    const int index = static_cast<int>(Menu::LeftMenu::CommandLine);
+    m_leftMenuPanel->simulateClick(index);
+    changeRightContentWidget(index);
 }
 
 void MainWindow::setupUI()
@@ -118,12 +152,12 @@ void MainWindow::setupUI()
 
 void MainWindow::setupCentralWidget()
 {
-    QWidget *centralWidget = new QWidget(this);
+    auto *centralWidget = new QWidget(this);
     centralWidget->setObjectName("centralWidget");
     centralWidget->setContentsMargins(0, 0, 0, 0);
     setCentralWidget(centralWidget);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    auto *mainLayout = new QVBoxLayout(centralWidget);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     m_mainSplitter = new QSplitter(Qt::Horizontal, centralWidget);
@@ -131,16 +165,15 @@ void MainWindow::setupCentralWidget()
     m_mainSplitter->setChildrenCollapsible(false);
     mainLayout->addWidget(m_mainSplitter);
 
-    // ---- Left panel ----
     m_leftContentWidget = new QWidget(m_mainSplitter);
     m_leftContentWidget->setObjectName("leftContentQidget");
     m_leftContentWidget->setMinimumHeight(20);
+
     m_leftContentLayout = new QVBoxLayout(m_leftContentWidget);
     m_leftContentLayout->setContentsMargins(10, 10, 10, 10);
 
-    // Collapse toggle at top
-    QWidget *collapseHeaderWidget = new QWidget(m_leftContentWidget);
-    QHBoxLayout *collapseHeaderLayout = new QHBoxLayout(collapseHeaderWidget);
+    auto *collapseHeaderWidget = new QWidget(m_leftContentWidget);
+    auto *collapseHeaderLayout = new QHBoxLayout(collapseHeaderWidget);
     collapseHeaderLayout->setContentsMargins(0, 0, 0, 0);
     collapseHeaderLayout->setSpacing(0);
     m_leftContentLayout->addWidget(collapseHeaderWidget);
@@ -166,87 +199,86 @@ void MainWindow::setupCentralWidget()
     collapseHeaderLayout->addWidget(m_collapseBtn);
     connect(m_collapseBtn, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
 
-    // Title section
-    QWidget *m_leftopWidget = new QWidget(m_leftContentWidget);
-    m_leftopWidget->setObjectName("leftopWidget");
-    QVBoxLayout *leftopLayout = new QVBoxLayout(m_leftopWidget);
-    leftopLayout->setContentsMargins(0, 0, 0, 0);
-    m_leftopWidget->setMinimumHeight(DpiTools::scaleValue(this, 60));
-    m_leftopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    m_leftContentLayout->addWidget(m_leftopWidget);
+    auto *leftTopWidget = new QWidget(m_leftContentWidget);
+    leftTopWidget->setObjectName("leftopWidget");
+    leftTopWidget->setMinimumHeight(DpiTools::scaleValue(this, 60));
+    leftTopWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    m_leftContentLayout->addWidget(leftTopWidget);
 
-    m_titleLabel = new QLabel(m_leftopWidget);
+    auto *leftTopLayout = new QVBoxLayout(leftTopWidget);
+    leftTopLayout->setContentsMargins(0, 0, 0, 0);
+
+    m_titleLabel = new QLabel(leftTopWidget);
     m_titleLabel->setText(Constants::Ttile::projectTitle());
     m_titleLabel->setObjectName("titleLabel");
     m_titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    leftopLayout->addWidget(m_titleLabel);
+    leftTopLayout->addWidget(m_titleLabel);
 
-    // Buttons row
-    m_connectWidget = new QWidget(m_leftopWidget);
-    QHBoxLayout *connectLayout = new QHBoxLayout(m_connectWidget);
+    m_connectWidget = new QWidget(leftTopWidget);
+    leftTopLayout->addWidget(m_connectWidget);
+
+    auto *connectLayout = new QHBoxLayout(m_connectWidget);
     connectLayout->setContentsMargins(0, 0, 0, 0);
     connectLayout->setSpacing(5);
-    leftopLayout->addWidget(m_connectWidget);
 
-    int iconSize = DpiTools::scaleValue(this, 14);
+    const int iconSize = DpiTools::scaleValue(this, 14);
 
-    m_connectNewBtn = new QPushButton(QStringLiteral("新建连接"));
+    m_connectNewBtn = new QPushButton(QStringLiteral("新建连接"), m_connectWidget);
     m_connectNewBtn->setObjectName("connectNewPushButton");
-    m_connectNewBtn->setIcon(QIcon(":/images/icons/icon-plus.png"));
+    m_connectNewBtn->setIcon(QIcon(QStringLiteral(":/images/icons/icon-plus.png")));
     m_connectNewBtn->setIconSize(QSize(iconSize, iconSize));
     m_connectNewBtn->setToolTip(QStringLiteral("新建连接"));
     m_connectNewBtn->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     connectLayout->addWidget(m_connectNewBtn, 3);
     connectLayout->addStretch(1);
 
-    m_settingBtn = new QPushButton("");
+    m_settingBtn = new QPushButton(QString(), m_connectWidget);
     m_settingBtn->setObjectName("settingPushButton");
-    m_settingBtn->setIcon(QIcon(":/images/icons/icon-setting.png"));
+    m_settingBtn->setIcon(QIcon(QStringLiteral(":/images/icons/icon-setting.png")));
     m_settingBtn->setIconSize(QSize(iconSize, iconSize));
     m_settingBtn->setToolTip(QStringLiteral("设置"));
     connectLayout->addWidget(m_settingBtn, 1);
 
-    QPushButton *importPushButton = new QPushButton("");
+    auto *importPushButton = new QPushButton(QString(), m_connectWidget);
     importPushButton->setObjectName("importPushButton");
-    importPushButton->setIcon(QIcon(":/images/icons/icon-import.png"));
+    importPushButton->setIcon(QIcon(QStringLiteral(":/images/icons/icon-import.png")));
     importPushButton->setIconSize(QSize(iconSize, iconSize));
     importPushButton->setToolTip(QStringLiteral("导入连接配置"));
     connectLayout->addWidget(importPushButton, 1);
 
-    QPushButton *exportPushButton = new QPushButton("");
+    auto *exportPushButton = new QPushButton(QString(), m_connectWidget);
     exportPushButton->setObjectName("exportPushButton");
-    exportPushButton->setIcon(QIcon(":/images/icons/icon-export.png"));
+    exportPushButton->setIcon(QIcon(QStringLiteral(":/images/icons/icon-export.png")));
     exportPushButton->setIconSize(QSize(iconSize, iconSize));
     exportPushButton->setToolTip(QStringLiteral("导出连接配置"));
     connectLayout->addWidget(exportPushButton, 1);
 
-    connect(importPushButton, &QPushButton::clicked,
-            this, &MainWindow::onImportConnections);
-    connect(exportPushButton, &QPushButton::clicked,
-            this, &MainWindow::onExportConnections);
+    connect(importPushButton, &QPushButton::clicked, this, &MainWindow::onImportConnections);
+    connect(exportPushButton, &QPushButton::clicked, this, &MainWindow::onExportConnections);
 
-    // Server section
     m_clientPanelWidget = new QWidget(m_leftContentWidget);
-    QVBoxLayout *clientPannelLayout = new QVBoxLayout(m_clientPanelWidget);
-    QLabel *clentPannelLabel = new QLabel(m_clientPanelWidget);
-    clentPannelLabel->setText(QStringLiteral("服务器"));
-    clentPannelLabel->setProperty("class", "title-white");
-    clientPannelLayout->addWidget(clentPannelLabel);
-    clientPannelLayout->addWidget(m_connectionPanel);
     m_leftContentLayout->addWidget(m_clientPanelWidget);
 
-    // Status label
+    auto *clientPanelLayout = new QVBoxLayout(m_clientPanelWidget);
+    auto *clientPanelLabel = new QLabel(QStringLiteral("服务列表"), m_clientPanelWidget);
+    clientPanelLabel->setProperty("class", "title-white");
+    clientPanelLayout->addWidget(clientPanelLabel);
+    clientPanelLayout->addWidget(m_connectionPanel);
+
     m_statusLabel = new QLabel(QStringLiteral("未连接"), m_leftContentWidget);
-    m_statusLabel->setStyleSheet("color: rgb(107,114,128); font-size: 11px; padding: 4px 0;");
+    m_statusLabel->setStyleSheet(QStringLiteral(
+        "color: rgb(107,114,128); font-size: 11px; padding: 4px 0;"));
     m_leftContentLayout->addWidget(m_statusLabel);
 
-    // Collapsed tool buttons (hidden by default, shown when collapsed)
     m_collapsedToolWidget = new QWidget(m_leftContentWidget);
+    m_collapsedToolWidget->setVisible(false);
+    m_leftContentLayout->addWidget(m_collapsedToolWidget);
+
     auto *collapsedToolLayout = new QVBoxLayout(m_collapsedToolWidget);
     collapsedToolLayout->setContentsMargins(2, 0, 2, 0);
     collapsedToolLayout->setSpacing(6);
 
-    auto createCollapsedBtn = [&](const QString &iconPath, const QString &tip) -> QPushButton* {
+    auto createCollapsedBtn = [&](const QString &iconPath, const QString &tip) -> QPushButton * {
         auto *btn = new QPushButton(m_collapsedToolWidget);
         btn->setIcon(QIcon(iconPath));
         btn->setIconSize(QSize(16, 16));
@@ -260,29 +292,30 @@ void MainWindow::setupCentralWidget()
         return btn;
     };
 
-    auto *cNewBtn = createCollapsedBtn(":/images/icons/icon-plus.png", QStringLiteral("新建连接"));
-    auto *cSettingBtn = createCollapsedBtn(":/images/icons/icon-setting.png", QStringLiteral("设置"));
-    auto *cImportBtn = createCollapsedBtn(":/images/icons/icon-import.png", QStringLiteral("导入连接配置"));
-    auto *cExportBtn = createCollapsedBtn(":/images/icons/icon-export.png", QStringLiteral("导出连接配置"));
+    auto *collapsedNewBtn = createCollapsedBtn(QStringLiteral(":/images/icons/icon-plus.png"),
+                                               QStringLiteral("新建连接"));
+    auto *collapsedSettingBtn = createCollapsedBtn(QStringLiteral(":/images/icons/icon-setting.png"),
+                                                   QStringLiteral("设置"));
+    auto *collapsedImportBtn = createCollapsedBtn(QStringLiteral(":/images/icons/icon-import.png"),
+                                                  QStringLiteral("导入连接配置"));
+    auto *collapsedExportBtn = createCollapsedBtn(QStringLiteral(":/images/icons/icon-export.png"),
+                                                  QStringLiteral("导出连接配置"));
 
-    connect(cNewBtn, &QPushButton::clicked, m_connectionPanel, &ConnectionPanel::addNewConnection);
-    connect(cSettingBtn, &QPushButton::clicked, this, [this]() {
+    connect(collapsedNewBtn, &QPushButton::clicked, m_connectionPanel, &ConnectionPanel::addNewConnection);
+    connect(collapsedSettingBtn, &QPushButton::clicked, this, [this]() {
         SettingsDialog dlg(this);
         dlg.exec();
     });
-    connect(cImportBtn, &QPushButton::clicked, this, &MainWindow::onImportConnections);
-    connect(cExportBtn, &QPushButton::clicked, this, &MainWindow::onExportConnections);
-
-    m_collapsedToolWidget->setVisible(false);
-    m_leftContentLayout->addWidget(m_collapsedToolWidget);
+    connect(collapsedImportBtn, &QPushButton::clicked, this, &MainWindow::onImportConnections);
+    connect(collapsedExportBtn, &QPushButton::clicked, this, &MainWindow::onExportConnections);
 
     m_leftContentLayout->addWidget(m_leftMenuPanel);
     m_leftContentLayout->addStretch();
 
-    // ---- Right panel ----
     m_rightContentWidget = new QWidget(m_mainSplitter);
     m_rightContentWidget->setObjectName("rightContentWidget");
-    QVBoxLayout *rightLayout = new QVBoxLayout(m_rightContentWidget);
+
+    auto *rightLayout = new QVBoxLayout(m_rightContentWidget);
     rightLayout->setContentsMargins(10, 0, 10, 10);
     rightLayout->setSpacing(4);
 
@@ -297,15 +330,11 @@ void MainWindow::setupCentralWidget()
     setupPages();
 
     m_expandedWidth = DpiTools::scaleValue(this, 220);
-    QList<int> mainSizes;
-    mainSizes << m_expandedWidth << DpiTools::scaleValue(this, 780);
-    m_mainSplitter->setSizes(mainSizes);
+    m_mainSplitter->setSizes({m_expandedWidth, DpiTools::scaleValue(this, 780)});
     m_mainSplitter->setStretchFactor(0, 0);
     m_mainSplitter->setStretchFactor(1, 1);
 
-    // Button connections
-    connect(m_connectNewBtn, &QPushButton::clicked,
-            m_connectionPanel, &ConnectionPanel::addNewConnection);
+    connect(m_connectNewBtn, &QPushButton::clicked, m_connectionPanel, &ConnectionPanel::addNewConnection);
     connect(m_settingBtn, &QPushButton::clicked, this, [this]() {
         SettingsDialog dlg(this);
         dlg.exec();
@@ -314,7 +343,7 @@ void MainWindow::setupCentralWidget()
 
 void MainWindow::toggleSidebar()
 {
-    int collapsedWidth = DpiTools::scaleValue(this, 56);
+    const int collapsedWidth = DpiTools::scaleValue(this, 56);
 
     if (!m_sidebarCollapsed) {
         m_expandedWidth = m_mainSplitter->sizes().at(0);
@@ -332,29 +361,25 @@ void MainWindow::toggleSidebar()
 
         m_leftContentWidget->setMinimumWidth(collapsedWidth);
         m_leftContentWidget->setMaximumWidth(collapsedWidth);
-
-        int totalWidth = m_mainSplitter->width();
-        m_mainSplitter->setSizes({collapsedWidth, totalWidth - collapsedWidth});
-    } else {
-        m_sidebarCollapsed = false;
-        m_collapseBtn->setText(QStringLiteral("<"));
-        m_collapseBtn->setToolTip(QStringLiteral("折叠侧栏"));
-
-        m_leftContentLayout->setContentsMargins(10, 10, 10, 10);
-        m_titleLabel->setVisible(true);
-        m_connectWidget->setVisible(true);
-        m_clientPanelWidget->setVisible(true);
-        m_statusLabel->setVisible(true);
-        m_collapsedToolWidget->setVisible(false);
-        m_leftMenuPanel->setCollapsed(false);
-
-        m_leftContentWidget->setMinimumWidth(0);
-        m_leftContentWidget->setMaximumWidth(16777215);
-
-        QList<int> sizes;
-        sizes << m_expandedWidth << (m_mainSplitter->width() - m_expandedWidth);
-        m_mainSplitter->setSizes(sizes);
+        m_mainSplitter->setSizes({collapsedWidth, m_mainSplitter->width() - collapsedWidth});
+        return;
     }
+
+    m_sidebarCollapsed = false;
+    m_collapseBtn->setText(QStringLiteral("<"));
+    m_collapseBtn->setToolTip(QStringLiteral("折叠侧栏"));
+
+    m_leftContentLayout->setContentsMargins(10, 10, 10, 10);
+    m_titleLabel->setVisible(true);
+    m_connectWidget->setVisible(true);
+    m_clientPanelWidget->setVisible(true);
+    m_statusLabel->setVisible(true);
+    m_collapsedToolWidget->setVisible(false);
+    m_leftMenuPanel->setCollapsed(false);
+
+    m_leftContentWidget->setMinimumWidth(0);
+    m_leftContentWidget->setMaximumWidth(QWIDGETSIZE_MAX);
+    m_mainSplitter->setSizes({m_expandedWidth, m_mainSplitter->width() - m_expandedWidth});
 }
 
 void MainWindow::setupPages()
@@ -375,7 +400,6 @@ void MainWindow::setupPages()
     m_rightStackedWidget->addWidget(m_commandLinePage);
 }
 
-// Mouse events
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (m_leftContentWidget->geometry().contains(event->pos()) ||
@@ -417,11 +441,12 @@ void MainWindow::onMaximizeClicked()
     if (m_isMaximized) {
         setGeometry(m_normalGeometry);
         m_isMaximized = false;
-    } else {
-        m_normalGeometry = geometry();
-        showMaximized();
-        m_isMaximized = true;
+        return;
     }
+
+    m_normalGeometry = geometry();
+    showMaximized();
+    m_isMaximized = true;
 }
 
 void MainWindow::onCloseClicked()
@@ -431,109 +456,130 @@ void MainWindow::onCloseClicked()
 
 void MainWindow::onImportConnections()
 {
-    QString filePath = QFileDialog::getOpenFileName(
-        this, QStringLiteral("导入连接配置"), QString(),
+    const QString filePath = QFileDialog::getOpenFileName(
+        this,
+        QStringLiteral("导入连接配置"),
+        QString(),
         QStringLiteral("JSON 文件 (*.json);;所有文件 (*)"));
 
-    if (filePath.isEmpty()) return;
+    if (filePath.isEmpty())
+        return;
 
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::warning(this, QStringLiteral("导入失败"),
+        QMessageBox::warning(this,
+                             QStringLiteral("导入失败"),
                              QStringLiteral("无法打开文件: %1").arg(file.errorString()));
         return;
     }
 
-    QByteArray data = file.readAll();
+    const QByteArray data = file.readAll();
     file.close();
 
-    QJsonParseError parseErr;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
-    if (parseErr.error != QJsonParseError::NoError || !doc.isArray()) {
-        QMessageBox::warning(this, QStringLiteral("导入失败"),
+    QJsonParseError parseError;
+    const QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !doc.isArray()) {
+        QMessageBox::warning(this,
+                             QStringLiteral("导入失败"),
                              QStringLiteral("文件格式错误，需要 JSON 数组格式"));
         return;
     }
 
-    QJsonArray arr = doc.array();
+    const QJsonArray connections = doc.array();
     int imported = 0;
     int skipped = 0;
-    auto &mgr = ConnectionConfigManager::instance();
-    auto existing = mgr.connections();
+    auto &manager = ConnectionConfigManager::instance();
+    auto existingConnections = manager.connections();
 
-    for (const QJsonValue &val : arr) {
-        if (!val.isObject()) continue;
-        ConnectionConfig cfg = ConnectionConfig::fromJson(val.toObject());
-        if (cfg.name.isEmpty() && cfg.host.isEmpty()) continue;
-        if (cfg.name.isEmpty())
-            cfg.name = QString("%1:%2").arg(cfg.host).arg(cfg.port);
+    for (const QJsonValue &value : connections) {
+        if (!value.isObject())
+            continue;
+
+        ConnectionConfig config = ConnectionConfig::fromJson(value.toObject());
+        if (config.name.isEmpty() && config.host.isEmpty())
+            continue;
+
+        if (config.name.isEmpty())
+            config.name = QStringLiteral("%1:%2").arg(config.host).arg(config.port);
 
         bool duplicate = false;
-        for (const ConnectionConfig &ec : existing) {
-            if (ec.host == cfg.host && ec.port == cfg.port && ec.database == cfg.database) {
+        for (const ConnectionConfig &existing : existingConnections) {
+            if (existing.host == config.host &&
+                existing.port == config.port &&
+                existing.database == config.database) {
                 duplicate = true;
                 break;
             }
         }
+
         if (duplicate) {
-            skipped++;
+            ++skipped;
             continue;
         }
 
-        cfg.id = ConnectionConfigManager::generateId();
-        mgr.addConnection(cfg);
-        existing.append(cfg);
-        imported++;
+        config.id = ConnectionConfigManager::generateId();
+        manager.addConnection(config);
+        existingConnections.append(config);
+        ++imported;
     }
 
     m_connectionPanel->refreshList();
 
-    QString msg = QStringLiteral("成功导入 %1 个连接配置").arg(imported);
-    if (skipped > 0)
-        msg += QStringLiteral("\n跳过 %1 个重复连接 (相同主机/端口/数据库)").arg(skipped);
-    QMessageBox::information(this, QStringLiteral("导入完成"), msg);
+    QString message = QStringLiteral("成功导入 %1 个连接配置").arg(imported);
+    if (skipped > 0) {
+        message += QStringLiteral("\n跳过 %1 个重复连接（相同主机/端口/数据库）")
+                       .arg(skipped);
+    }
+
+    QMessageBox::information(this, QStringLiteral("导入完成"), message);
 }
 
 void MainWindow::onExportConnections()
 {
-    auto conns = ConnectionConfigManager::instance().connections();
-    if (conns.isEmpty()) {
-        QMessageBox::information(this, QStringLiteral("导出"),
-                                 QStringLiteral("当前没有连接配置可导出"));
+    const auto connections = ConnectionConfigManager::instance().connections();
+    if (connections.isEmpty()) {
+        QMessageBox::information(this,
+                                 QStringLiteral("导出连接"),
+                                 QStringLiteral("当前没有可导出的连接配置"));
         return;
     }
 
-    QString filePath = QFileDialog::getSaveFileName(
-        this, QStringLiteral("导出连接配置"), QStringLiteral("redis-connections.json"),
+    const QString filePath = QFileDialog::getSaveFileName(
+        this,
+        QStringLiteral("导出连接配置"),
+        QStringLiteral("redis-connections.json"),
         QStringLiteral("JSON 文件 (*.json);;所有文件 (*)"));
 
-    if (filePath.isEmpty()) return;
+    if (filePath.isEmpty())
+        return;
 
-    QJsonArray arr;
-    for (const ConnectionConfig &c : conns) {
-        QJsonObject obj;
-        obj[QStringLiteral("name")] = c.name;
-        obj[QStringLiteral("host")] = c.host;
-        obj[QStringLiteral("port")] = c.port;
-        obj[QStringLiteral("username")] = c.username;
-        obj[QStringLiteral("password")] = c.password;
-        obj[QStringLiteral("database")] = c.database;
-        arr.append(obj);
+    QJsonArray connectionArray;
+    for (const ConnectionConfig &connection : connections) {
+        QJsonObject object;
+        object[QStringLiteral("name")] = connection.name;
+        object[QStringLiteral("host")] = connection.host;
+        object[QStringLiteral("port")] = connection.port;
+        object[QStringLiteral("username")] = connection.username;
+        object[QStringLiteral("password")] = connection.password;
+        object[QStringLiteral("database")] = connection.database;
+        connectionArray.append(object);
     }
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::warning(this, QStringLiteral("导出失败"),
+        QMessageBox::warning(this,
+                             QStringLiteral("导出失败"),
                              QStringLiteral("无法写入文件: %1").arg(file.errorString()));
         return;
     }
 
-    file.write(QJsonDocument(arr).toJson(QJsonDocument::Indented));
+    file.write(QJsonDocument(connectionArray).toJson(QJsonDocument::Indented));
     file.close();
 
-    QMessageBox::information(this, QStringLiteral("导出完成"),
-                             QStringLiteral("已导出 %1 个连接配置到:\n%2")
-                                 .arg(conns.size()).arg(filePath));
+    QMessageBox::information(
+        this,
+        QStringLiteral("导出完成"),
+        QStringLiteral("已导出 %1 个连接配置到:\n%2").arg(connections.size()).arg(filePath));
 }
 
 void MainWindow::loadStyleSheet(const QString &filePath)
@@ -541,10 +587,10 @@ void MainWindow::loadStyleSheet(const QString &filePath)
     QFile file(filePath);
     if (file.open(QFile::ReadOnly | QFile::Text)) {
         QTextStream stream(&file);
-        QString styleSheet = stream.readAll();
-        qApp->setStyleSheet(styleSheet);
+        qApp->setStyleSheet(stream.readAll());
         file.close();
-    } else {
-        qDebug() << "样式表加载失败:" << file.errorString();
+        return;
     }
+
+    qDebug() << "样式表加载失败:" << file.errorString();
 }

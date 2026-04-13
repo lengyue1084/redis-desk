@@ -117,7 +117,9 @@ void ConnectionPanel::loadConnections()
         item->setData(c.id, Qt::UserRole + 10);
 
         const bool isActive = (c.id == m_currentConnectionId && isConnected());
+        const bool isConnecting = (c.id == m_connectingConnectionId);
         item->setData(isActive, Qt::UserRole + 11);
+        item->setData(isConnecting, Qt::UserRole + 12);
         item->setIcon(QIcon(QStringLiteral(":/images/icons/icon-client.png")));
         m_listModel->appendRow(item);
     }
@@ -144,8 +146,11 @@ void ConnectionPanel::addNewConnection()
 {
     ConnectionDialog dlg(this);
     if (dlg.exec() == QDialog::Accepted) {
-        ConnectionConfigManager::instance().addConnection(dlg.connectionConfig());
+        const ConnectionConfig config = dlg.connectionConfig();
+        ConnectionConfigManager::instance().addConnection(config);
         loadConnections();
+        disconnectCurrent();
+        connectToConfig(config);
     }
 }
 
@@ -171,17 +176,26 @@ void ConnectionPanel::connectToConfig(const ConnectionConfig &config)
 {
     m_currentClient = new RedisClient(this);
     m_currentConnectionId = config.id;
+    m_connectingConnectionId = config.id;
+    m_lastRequestedConnectionId = config.id;
+    loadConnections();
+    emit connectionStarted(config.name.isEmpty() ? QStringLiteral("%1:%2").arg(config.host).arg(config.port)
+                                                 : config.name);
 
     connect(m_currentClient, &RedisClient::connected, this, [this]() {
+        m_connectingConnectionId.clear();
         loadConnections();
         emit connectionEstablished(m_currentClient);
     });
 
     connect(m_currentClient, &RedisClient::errorOccurred, this, [this](const QString &err) {
+        m_connectingConnectionId.clear();
+        loadConnections();
         emit connectionError(err);
     });
 
     connect(m_currentClient, &RedisClient::disconnected, this, [this]() {
+        m_connectingConnectionId.clear();
         emit connectionLost();
         loadConnections();
     });
@@ -197,6 +211,20 @@ void ConnectionPanel::autoConnectFirst()
     connectToConfig(conns.first());
 }
 
+void ConnectionPanel::retryLastConnection()
+{
+    if (!m_lastRequestedConnectionId.isEmpty()) {
+        const ConnectionConfig cfg = ConnectionConfigManager::instance().findById(m_lastRequestedConnectionId);
+        if (!cfg.id.isEmpty()) {
+            disconnectCurrent();
+            connectToConfig(cfg);
+            return;
+        }
+    }
+
+    autoConnectFirst();
+}
+
 void ConnectionPanel::disconnectCurrent()
 {
     if (m_currentClient) {
@@ -204,6 +232,7 @@ void ConnectionPanel::disconnectCurrent()
         m_currentClient->deleteLater();
         m_currentClient = nullptr;
         m_currentConnectionId.clear();
+        m_connectingConnectionId.clear();
         loadConnections();
     }
 }

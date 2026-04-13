@@ -23,6 +23,7 @@ public:
     void refreshList();
 
 signals:
+    void connectionStarted(const QString &connectionName);
     void connectionEstablished(RedisClient *client);
     void connectionLost();
     void connectionError(const QString &error);
@@ -33,6 +34,7 @@ public slots:
     void onItemDoubleClicked(const QModelIndex &index);
     void disconnectCurrent();
     void autoConnectFirst();
+    void retryLastConnection();
 
 private:
     void setupUI();
@@ -45,6 +47,8 @@ private:
     QSortFilterProxyModel *m_proxyModel;
     RedisClient *m_currentClient;
     QString m_currentConnectionId;
+    QString m_connectingConnectionId;
+    QString m_lastRequestedConnectionId;
 };
 
 #endif // CONNECTIONPANEL_H
