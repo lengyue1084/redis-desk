@@ -63,7 +63,6 @@ void KeyManagerPage::resizeEvent(QResizeEvent *event)
     if (m_drawerOpen && m_drawerAnim->state() != QAbstractAnimation::Running) {
         int targetWidth = qMax(this->width() * 2 / 3, 380);
         m_detailContainer->setMaximumWidth(targetWidth);
-        m_detailContainer->setMinimumWidth(targetWidth);
     }
 }
 
@@ -420,8 +419,6 @@ void KeyManagerPage::showDetailDrawer()
     m_drawerAnim->setStartValue(0);
     m_drawerAnim->setEndValue(targetWidth);
     m_drawerAnim->start();
-
-    m_detailContainer->setMinimumWidth(targetWidth);
 }
 
 void KeyManagerPage::hideDetailDrawer()

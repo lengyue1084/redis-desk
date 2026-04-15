@@ -126,14 +126,31 @@ void MainWindow::setupCentralWidget()
     m_leftContentLayout->setContentsMargins(10, 10, 10, 10);
 
     // Collapse toggle at top
-    m_collapseBtn = new QPushButton(m_leftContentWidget);
+    QWidget *collapseHeaderWidget = new QWidget(m_leftContentWidget);
+    QHBoxLayout *collapseHeaderLayout = new QHBoxLayout(collapseHeaderWidget);
+    collapseHeaderLayout->setContentsMargins(0, 0, 0, 0);
+    collapseHeaderLayout->setSpacing(0);
+    m_leftContentLayout->addWidget(collapseHeaderWidget);
+
+    m_collapseBtn = new QPushButton(collapseHeaderWidget);
     m_collapseBtn->setObjectName("collapseSidebarBtn");
     m_collapseBtn->setCursor(Qt::PointingHandCursor);
+    m_collapseBtn->setText(QStringLiteral("<"));
     m_collapseBtn->setToolTip(QStringLiteral("折叠侧栏"));
-    m_collapseBtn->setIcon(QIcon(":/images/icons/icon-chevron-left.svg"));
-    m_collapseBtn->setIconSize(QSize(12, 12));
+    m_collapseBtn->setFlat(true);
+    m_collapseBtn->setMinimumHeight(DpiTools::scaleValue(this, 28));
+    m_collapseBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_collapseBtn->setIcon(QIcon(QStringLiteral(":/images/app-icon.png")));
+    m_collapseBtn->setIconSize(QSize(DpiTools::scaleValue(this, 18), DpiTools::scaleValue(this, 18)));
     m_collapseBtn->setLayoutDirection(Qt::RightToLeft);
-    m_leftContentLayout->addWidget(m_collapseBtn);
+    m_collapseBtn->setStyleSheet(QStringLiteral(
+        "QPushButton#collapseSidebarBtn {"
+        "padding: 4px 8px 4px 8px;"
+        "text-align: left;"
+        "font-size: 14px;"
+        "font-weight: 600;"
+        "}"));
+    collapseHeaderLayout->addWidget(m_collapseBtn);
     connect(m_collapseBtn, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
 
     // Title section
@@ -289,8 +306,7 @@ void MainWindow::toggleSidebar()
     if (!m_sidebarCollapsed) {
         m_expandedWidth = m_mainSplitter->sizes().at(0);
         m_sidebarCollapsed = true;
-        m_collapseBtn->setText(QString());
-        m_collapseBtn->setIcon(QIcon(":/images/icons/icon-chevron-right.svg"));
+        m_collapseBtn->setText(QStringLiteral(">"));
         m_collapseBtn->setToolTip(QStringLiteral("展开侧栏"));
 
         m_leftContentLayout->setContentsMargins(4, 10, 4, 10);
@@ -308,8 +324,7 @@ void MainWindow::toggleSidebar()
         m_mainSplitter->setSizes({collapsedWidth, totalWidth - collapsedWidth});
     } else {
         m_sidebarCollapsed = false;
-        m_collapseBtn->setText(QString());
-        m_collapseBtn->setIcon(QIcon(":/images/icons/icon-chevron-left.svg"));
+        m_collapseBtn->setText(QStringLiteral("<"));
         m_collapseBtn->setToolTip(QStringLiteral("折叠侧栏"));
 
         m_leftContentLayout->setContentsMargins(10, 10, 10, 10);
