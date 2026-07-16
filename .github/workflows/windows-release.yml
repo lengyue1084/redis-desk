@@ -1,0 +1,98 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt and MinGW
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.5.3"
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          tools: tools_mingw1120
+          cache: true
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Resolve package version
+        id: version
+        shell: pwsh
+        run: |
+          $cmake = Get-Content -LiteralPath CMakeLists.txt -Raw
+          $match = [regex]::Match($cmake, 'project\s*\(\s*RedisDesk\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)', 'IgnoreCase')
+          if (-not $match.Success) { throw "Unable to read the CMake project version." }
+          $version = $match.Groups[1].Value
+
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $tagVersion = "${{ github.ref_name }}" -replace '^v', ''
+            if ($tagVersion -ne $version) {
+              throw "Tag version '$tagVersion' does not match CMake project version '$version'."
+            }
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Restore signing certificate
+        id: signing
+        shell: pwsh
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CERTIFICATE_BASE64)) {
+            "certificate=" >> $env:GITHUB_OUTPUT
+            Write-Host "No signing certificate configured; package will be unsigned."
+            exit 0
+          }
+
+          $certificate = Join-Path $env:RUNNER_TEMP "redisdesk-signing.pfx"
+          [IO.File]::WriteAllBytes($certificate, [Convert]::FromBase64String($env:CERTIFICATE_BASE64))
+          "certificate=$certificate" >> $env:GITHUB_OUTPUT
+
+      - name: Build Windows installer
+        shell: pwsh
+        env:
+          REDISDESK_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+        run: |
+          $parameters = @{
+            Version = "${{ steps.version.outputs.version }}"
+            QtDir = $env:QT_ROOT_DIR
+          }
+          $certificate = "${{ steps.signing.outputs.certificate }}"
+          if (-not [string]::IsNullOrWhiteSpace($certificate)) {
+            $parameters.CertificatePath = $certificate
+          }
+          & ./scripts/package-windows.ps1 @parameters
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RedisDesk-Setup-v${{ steps.version.outputs.version }}-x64
+          path: |
+            out/installer/RedisDesk-Setup-v${{ steps.version.outputs.version }}-x64.exe
+            out/installer/RedisDesk-Setup-v${{ steps.version.outputs.version }}-x64.exe.sha256
+          if-no-files-found: error
+
+      - name: Upload GitHub release assets
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/installer/RedisDesk-Setup-v${{ steps.version.outputs.version }}-x64.exe
+            out/installer/RedisDesk-Setup-v${{ steps.version.outputs.version }}-x64.exe.sha256

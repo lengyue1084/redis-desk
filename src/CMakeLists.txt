@@ -49,7 +49,11 @@ set(SOURCES
 
 set(APP_PLATFORM_SOURCES)
 if(WIN32)
-    list(APPEND APP_PLATFORM_SOURCES app.rc)
+    configure_file(app-version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/app-version.rc @ONLY)
+    list(APPEND APP_PLATFORM_SOURCES
+        app.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/app-version.rc
+    )
 endif()
 
 # 资源文件

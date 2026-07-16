@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # 设置项目名称和版本
-project(RedisDesk VERSION 0.1.0 LANGUAGES CXX)
+project(RedisDesk VERSION 0.2.2 LANGUAGES CXX)
 
 # 设置默认构建类型
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
